@@ -1,0 +1,63 @@
+{
+  "name": "@data-fair/processing-import-api",
+  "version": "0.0.0",
+  "description": "Create a data-fair dataset from an API",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "mocha --exit -timeout 120000",
+    "lint": "eslint .",
+    "prepare": "husky install",
+    "build-types": "df-build-types --mjs && ncp lib/processing-config/.type/resolved-schema.json processing-config-schema.json",
+    "prepublishOnly": "npm run build-types"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/data-fair/processing-import-api.git"
+  },
+  "keywords": [
+    "data-fair-processings-plugin"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/data-fair/processing-import-api/issues"
+  },
+  "homepage": "https://github.com/data-fair/processing-import-api#readme",
+  "devDependencies": {
+    "@bcherny/json-schema-ref-parser": "^10.0.5-fork",
+    "@commitlint/config-conventional": "^19.1.0",
+    "@data-fair/lib": "^0.32.0",
+    "@types/config": "^3.3.3",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.30",
+    "ajv-formats": "^2.1.1",
+    "ajv-i18n": "^4.2.0",
+    "axios": "^1.6.7",
+    "chroma-js": "^2.4.2",
+    "commitlint": "^19.2.1",
+    "config": "^3.3.9",
+    "dayjs": "^1.11.10",
+    "draftlog": "^1.0.13",
+    "eslint": "^8.57.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-no-only-tests": "^3.1.0",
+    "husky": "^9.0.11",
+    "json-schema-to-typescript": "^11.0.5",
+    "mocha": "^10.2.0",
+    "ncp": "^2.0.0",
+    "nock": "^13.5.4",
+    "standard": "^17.0.0",
+    "typescript": "^5.4.3",
+    "ws": "^8.16.0"
+  },
+  "dependencies": {
+    "csv-stringify": "^6.5.0",
+    "date-fns": "^3.3.1",
+    "form-data": "^4.0.0",
+    "slugify": "^1.6.6"
+  }
+}

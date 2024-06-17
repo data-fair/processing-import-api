@@ -1,0 +1,382 @@
+{
+  "type": "object",
+  "x-exports": ["types", "resolvedSchemaJson"],
+  "x-display": "tabs",
+  "required": ["datasetMode"],
+  "allOf": [
+    {
+      "title": "Jeu de données",
+      "oneOf": [
+        {
+          "title": "Créer un jeu de données",
+          "required": ["dataset"],
+          "properties": {
+            "datasetMode": {
+              "type": "string",
+              "const": "create",
+              "title": "Action"
+            },
+            "dataset": {
+              "type": "object",
+              "required": ["title"],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "title": "Titre"
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "Mettre à jour un jeu de données",
+          "required": ["dataset"],
+          "properties": {
+            "datasetMode": {
+              "type": "string",
+              "const": "update"
+            },
+            "dataset": {
+              "type": "object",
+              "title": "Jeu de donnée existant",
+              "x-fromUrl": "{context.dataFairUrl}/api/v1/datasets?q={q}&select=id,title&{context.ownerFilter}",
+              "x-itemsProp": "results",
+              "x-itemTitle": "title",
+              "x-itemKey": "id",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "title": "Identifiant"
+                },
+                "title": {
+                  "type": "string",
+                  "title": "Titre"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Source des données",
+      "type": "object",
+      "required": ["apiURL", "auth"],
+      "properties": {
+        "apiURL": {
+          "title": "URL de l'API",
+          "type": "string"
+        },
+        "auth": {
+          "type": "object",
+          "title": "Méthode d'authentification",
+          "description": "La méthode d'authentification pour acceder à l'api",
+          "default": {
+            "authMethod": "noAuth"
+          },
+          "oneOf": [
+            {
+              "title": "Pas d'authentification",
+              "properties": {
+                "authMethod": {
+                  "type": "string",
+                  "const": "noAuth"
+                }
+              }
+            },
+            {
+              "title": "Basic Auth",
+              "properties": {
+                "authMethod": {
+                  "type": "string",
+                  "const": "basicAuth"
+                },
+                "username": {
+                  "type": "string",
+                  "title": "Nom d'utilisateur"
+                },
+                "password": {
+                  "type": "string",
+                  "title": "Mot de passe"
+                }
+              }
+            },
+            {
+              "title": "Bearer Token",
+              "properties": {
+                "authMethod": {
+                  "type": "string",
+                  "const": "bearerAuth"
+                },
+                "token": {
+                  "type": "string",
+                  "title": "Token"
+                }
+              }
+            },
+            {
+              "title": "API key",
+              "properties": {
+                "authMethod": {
+                  "type": "string",
+                  "const": "apiKey"
+                },
+                "apiKeyHeader": {
+                  "type": "string",
+                  "title": "Clé",
+                  "description": "Nom de la clé dans l'entête"
+                },
+                "apiKeyValue": {
+                  "type": "string",
+                  "title": "Valeur",
+                  "description": "Valeur de la clé"
+                }
+              }
+            },
+            {
+              "title": "OAuth 2.0",
+              "required": ["grantType", "tokenURL", "clientId", "clientSecret"],
+              "properties": {
+                "authMethod": {
+                  "type": "string",
+                  "const": "oauth2"
+                },
+                "grantType": {
+                  "type": "string",
+                  "title": "Type de grant",
+                  "description": "Type de grant",
+                  "default": "client_credentials",
+                  "oneOf": [
+                    {
+                      "title": "Client Credentials",
+                      "const": "client_credentials"
+                    },
+                    {
+                      "title": "Password Credentials",
+                      "const": "password_credentials"
+                    }
+                  ]
+                },
+                "tokenURL": {
+                  "type": "string",
+                  "title": "URL d'accès au token",
+                  "description": "L'endpoint du serveur d'autorisation. Cela est utilisé pour obtenir le jeton d'accès."
+                },
+                "clientId": {
+                  "type": "string",
+                  "title": "Client ID"
+                },
+                "clientSecret": {
+                  "type": "string",
+                  "title": "Client Secret"
+                },
+                "username": {
+                  "type": "string",
+                  "title": "Nom d'utilisateur",
+                  "x-if": "parent.value.grantType == 'password_credentials'",
+                  "x-options": {
+                    "evalMethod": "evalExpr"
+                  }
+                },
+                "password": {
+                  "type": "string",
+                  "title": "Mot de passe",
+                  "x-if": "parent.value.grantType == 'password_credentials'",
+                  "x-options": {
+                    "evalMethod": "evalExpr"
+                  }
+                }
+              }
+            },
+            {
+              "title": "Session",
+              "properties": {
+                "authMethod": {
+                  "type": "string",
+                  "const": "session"
+                },
+                "loginURL": {
+                  "type": "string",
+                  "title": "URL de initSession",
+                  "description": "http://path/to/glpi/apirest.php/initSession"
+                },
+                "username": {
+                  "type": "string",
+                  "title": "Nom d'utilisateur",
+                  "default": ""
+                },
+                "password": {
+                  "type": "string",
+                  "title": "Mot de passe",
+                  "default": ""
+                },
+                "tokenApp": {
+                  "type": "string",
+                  "title": "App-Token",
+                  "description": "Chaine fournie par la configuration GLPI",
+                  "default": ""
+                },
+                "tokenUser": {
+                  "type": "string",
+                  "title": "user_token",
+                  "description": "Chaine définis dans les préférences de l'utilisateur",
+                  "default": ""
+                }
+              }
+            }
+          ]
+        },
+        "resultPath": {
+          "title": "Clé dans l'objet JSON pointant sur le tableau de résultats",
+          "description": "Chemin vers le tableau de résultats dans l'objet JSON (ex: data.results)",
+          "type": "string"
+        },
+        "pagination": {
+          "title": "Pagination",
+          "type": "object",
+          "default": {
+            "method": "none"
+          },
+          "oneOf": [
+            {
+              "title": "Pas de pagination",
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "const": "none"
+                }
+              }
+            },
+            {
+              "title": "Extraire l'URL de la page suivante depuis la donnée",
+              "required": ["nextPagePath"],
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "const": "nextPageData"
+                },
+                "nextPagePath": {
+                  "type": "string",
+                  "title": "Chemin vers la page suivante",
+                  "description": "Chemin vers la page suivante dans l'objet JSON (ex: next)"
+                },
+                "limitKey": {
+                  "type": "string",
+                  "title": "Nom du paramètre de type \"limit\"",
+                  "description": "Ce paramètre est utilisé pour définir le nombre d'éléments à récupérer. (ex: limit ou size)"
+                },
+                "limitValue": {
+                  "type": "number",
+                  "title": "Nombre d'éléments par page",
+                  "description": "Nombre d'éléments à récupérer par page",
+                  "default": 1000
+                }
+              }
+            },
+            {
+              "title": "Paramètres dans l'URL",
+              "required": ["offsetKey"],
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "const": "queryParams"
+                },
+                "offsetKey": {
+                  "type": "string",
+                  "title": "Nom du paramètre de type \"offset\"",
+                  "description": "Ce paramètre est utilisé pour progresser dans la pagination. Il est incrémenté à chaque appel. (ex: offset ou skip)",
+                  "default": "offset"
+                },
+                "offsetFrom0": {
+                  "type": "boolean",
+                  "title": "Commencer à 0",
+                  "description": "Commence la pagination à 0. Par défaut, la pagination commence à 1.",
+                  "default": false
+                },
+                "offsetPages": {
+                  "type": "boolean",
+                  "title": "Offset en nombre de pages",
+                  "description": "Incrémente le paramètre d'offset de 1 par page. Par défaut l'incrément est celui du nombre de lignes lues.",
+                  "default": false
+                },
+                "limitKey": {
+                  "type": "string",
+                  "title": "Nom du paramètre de type \"limit\"",
+                  "description": "Ce paramètre est utilisé pour définir le nombre d'éléments à récupérer. (ex: limit ou take)"
+                },
+                "limitValue": {
+                  "type": "number",
+                  "title": "Nombre d'éléments par page",
+                  "description": "Nombre d'éléments à récupérer par page",
+                  "default": 1000
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Champs à récupérer",
+      "required": ["block"],
+      "properties": {
+        "block": { "$ref": "#/$definitions/block" }
+      }
+    }
+  ],
+  "$definitions": {
+    "block": {
+      "type": "object",
+      "properties": {
+        "mapping": {
+          "type": "array",
+          "title": "Champs à récupérer",
+          "description": "Les colonnes qui seront récupéré depuis ce niveau",
+          "x-itemTitle": "key",
+          "items": {
+            "type": "object",
+            "required": ["key", "path"],
+            "properties": {
+              "key": {
+                "type": "string",
+                "title": "Identifiant de la colonne",
+                "description": "Clé de la colonne"
+              },
+              "path": {
+                "type": "string",
+                "title": "Chemin de la colonne",
+                "description": "Chemin d'accès à la colonne dans le json (à partir du tableau de résultat)"
+              },
+              "multivalued": {
+                "type": "boolean",
+                "title": "Colonne multivalué",
+                "description": "Si la clé est un tableau, ou pointe vers un tableau.",
+                "x-display": "switch",
+                "default": false
+              },
+              "separator": {
+                "x-if": "parent.value.multivalued == true",
+                "type": "string",
+                "title": "Séparateur",
+                "default": ";"
+              }
+            }
+          }
+        },
+        "expand": {
+          "title": "Données en profondeur d'un tableau",
+          "type": "object",
+          "required": ["block", "path"],
+          "properties": {
+            "path": {
+              "type": "string",
+              "title": "Chemin de la colonne",
+              "description": "Chemin d'accès à la colonne dans le json (à partir du tableau de résultat)"
+            },
+            "block": { "$ref": "#/$definitions/block" }
+          }
+        }
+      }
+    }
+  }
+}
