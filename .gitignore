@@ -113,5 +113,3 @@ data/
 node_modules/
 
 .type
-
-processing-config-schema.json

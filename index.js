@@ -67,7 +67,7 @@ function process (data, block, separator, common = {}) {
  * @param {import('./lib/types.mjs').JSONMappingProcessingContext} context
  */
 exports.run = async (context) => {
-  const { processingConfig, processingId, tmpDir, axios, log, patchConfig, ws } = context
+  const { processingConfig, processingId, tmpDir, axios, log, patchConfig } = context
 
   // ------------------ Récupération, conversion et envoi des données ------------------
   await log.step('Récupération et conversion des données')
