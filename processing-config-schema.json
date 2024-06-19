@@ -314,7 +314,7 @@
       "title": "Champs à récupérer",
       "required": ["block"],
       "properties": {
-        "block": { "$ref": "#/$definitions/block" },
+        "block": { "$ref": "#/definitions/block" },
         "separator": {
           "x-if": "parent.value.multivalued == true",
           "type": "string",
@@ -324,7 +324,7 @@
       }
     }
   ],
-  "$definitions": {
+  "definitions": {
     "block": {
       "type": "object",
       "properties": {
@@ -360,7 +360,7 @@
               "title": "Chemin de la colonne",
               "description": "Chemin d'accès à la colonne dans le json (à partir du tableau de résultat)"
             },
-            "block": { "$ref": "#/$definitions/block" }
+            "block": { "$ref": "#/definitions/block" }
           }
         }
       }
