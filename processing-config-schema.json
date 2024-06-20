@@ -379,7 +379,7 @@
             "type": {
               "const": "expand"
             },
-            "expand": { "$ref": "#/definitions/mapping" }
+            "expand": { "$ref": "#/definitions/expand" }
           }
         },
         {
@@ -389,7 +389,7 @@
               "const": "mapping-expand"
             },
             "mapping": { "$ref": "#/definitions/mapping" },
-            "expand": { "$ref": "#/definitions/mapping" }
+            "expand": { "$ref": "#/definitions/expand" }
           }
         }
       ],
