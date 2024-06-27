@@ -325,76 +325,49 @@
     }
   ],
   "definitions": {
-    "mapping": {
-      "type": "array",
-      "title": "Champs à récupérer",
-      "description": "Les colonnes qui seront récupéré depuis ce niveau",
-      "x-itemTitle": "key",
-      "items": {
-        "type": "object",
-        "required": ["key", "path"],
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Identifiant de la colonne",
-            "description": "Clé de la colonne"
-          },
-          "path": {
-            "type": "string",
-            "title": "Chemin de la colonne",
-            "description": "Chemin d'accès dans le json à partir de cette position"
-          }
-        }
-      }
-    },
-    "expand": {
-      "title": "Données en profondeur d'un tableau",
-      "type": "object",
-      "required": ["block", "path"],
-      "properties": {
-        "path": {
-          "type": "string",
-          "title": "Chemin de la colonne",
-          "description": "Chemin d'accès dans le json à partir de cette position"
-        },
-        "block": { "$ref": "#/definitions/block" }
-      }
-    },
     "block": {
       "type": "object",
-      "required": "type",
-      "oneOf": [
-        {
-          "title": "Propriétés d'un objet",
-          "properties": {
-            "type": {
-              "const": "mapping"
-            },
-            "mapping": { "$ref": "#/definitions/mapping" }
+      "properties": {
+        "mapping": {
+          "type": "array",
+          "title": "Champs à récupérer",
+          "description": "Les colonnes qui seront récupéré depuis ce niveau",
+          "x-itemTitle": "key",
+          "items": {
+            "type": "object",
+            "required": ["key", "path"],
+            "properties": {
+              "key": {
+                "type": "string",
+                "title": "Identifiant de la colonne",
+                "description": "Clé de la colonne"
+              },
+              "path": {
+                "type": "string",
+                "title": "Chemin de la colonne",
+                "description": "Chemin d'accès dans le json à partir de cette position"
+              }
+            }
           }
         },
-        {
-          "title": "Données en profondeur dans un tableau",
+        "expand": {
+          "title": "Données en profondeur d'un tableau",
+          "type": "object",
           "properties": {
-            "type": {
-              "const": "expand"
-            },
-            "expand": { "$ref": "#/definitions/expand" }
-          }
-        },
-        {
-          "title": "Propriétés d'un objet et données en profondeur",
-          "properties": {
-            "type": {
-              "const": "mapping-expand"
-            },
-            "mapping": { "$ref": "#/definitions/mapping" },
-            "expand": { "$ref": "#/definitions/expand" }
+            "path": {
+              "type": "string",
+              "title": "Chemin de la colonne",
+              "description": "Chemin d'accès dans le json à partir de cette position"
+            }
+          },
+          "dependencies": {
+            "path": {
+              "properties": {
+                "block": { "$ref": "#/definitions/block" }
+              }
+            }
           }
         }
-      ],
-      "default": {
-        "type": "mapping"
       }
     }
   }

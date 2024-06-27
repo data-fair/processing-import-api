@@ -44,11 +44,9 @@ describe('test', function () {
         apiURL: 'https://test.com/api/items',
         separator: ';',
         block: {
-          type: 'expand',
           expand: {
             path: 'sites',
             block: {
-              type: 'mapping-expand',
               mapping: [{
                 key: 'site',
                 path: 'name'
@@ -67,7 +65,6 @@ describe('test', function () {
               expand: {
                 path: 'events',
                 block: {
-                  type: 'mapping-expand',
                   mapping: [
                     {
                       key: 'title',
@@ -80,7 +77,6 @@ describe('test', function () {
                   expand: {
                     path: 'sessions',
                     block: {
-                      type: 'mapping',
                       mapping: [
                         {
                           key: 'date',
