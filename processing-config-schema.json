@@ -331,7 +331,7 @@
         "mapping": {
           "type": "array",
           "title": "Champs à récupérer",
-          "description": "Les colonnes qui seront récupéré depuis ce niveau",
+          "description": "Les colonnes qui seront récupérées depuis ce niveau",
           "x-itemTitle": "key",
           "items": {
             "type": "object",
@@ -353,6 +353,7 @@
         "expand": {
           "title": "Données en profondeur d'un tableau",
           "type": "object",
+          "layout": "card",
           "properties": {
             "path": {
               "type": "string",
@@ -363,7 +364,9 @@
           "dependencies": {
             "path": {
               "properties": {
-                "block": { "$ref": "#/definitions/block" }
+                "block": {
+                  "$ref": "#/definitions/block"
+                }
               }
             }
           }
