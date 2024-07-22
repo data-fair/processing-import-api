@@ -316,9 +316,8 @@
       "properties": {
         "block": { "$ref": "#/definitions/block" },
         "separator": {
-          "x-if": "parent.value.multivalued == true",
           "type": "string",
-          "title": "Séparateur",
+          "title": "Séparateur pour les tableaux",
           "default": ";"
         }
       }
