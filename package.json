@@ -7,7 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "mocha --exit -timeout 120000",
+    "test": "mkdir -p data && mocha --exit -timeout 120000",
     "lint": "eslint .",
     "prepare": "husky install"
   },
