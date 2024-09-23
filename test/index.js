@@ -7,6 +7,72 @@ const processing = require('../')
 const sites = require('./sites.json')
 const { getValueByPath } = require('../lib/utils')
 
+const title = 'Processing import API : sites'
+const processingConfig = {
+  datasetMode: 'create',
+  dataset: { title },
+  apiURL: 'https://test.com/api/items',
+  separator: ';',
+  block: {
+    expand: {
+      path: 'sites',
+      block: {
+        mapping: [{
+          key: 'site',
+          path: 'name'
+        }, {
+          key: 'address',
+          path: 'address'
+        },
+        {
+          key: 'zip',
+          path: 'zip_code'
+        },
+        {
+          key: 'city',
+          path: 'city'
+        }],
+        expand: {
+          path: 'events',
+          block: {
+            mapping: [
+              {
+                key: 'title',
+                path: 'title'
+              }, {
+                key: 'synopsis',
+                path: 'synopsis'
+              }
+            ],
+            expand: {
+              path: 'sessions',
+              block: {
+                mapping: [
+                  {
+                    key: 'date',
+                    path: 'date'
+                  }, {
+                    key: 'features',
+                    path: 'features'
+                  },
+                  {
+                    key: 'url',
+                    path: 'booking_url'
+                  },
+                  {
+                    key: 'headline',
+                    path: 'headline'
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 describe('test', function () {
   it('should expose a plugin config schema for super admins', async () => {
     const schema = require('../plugin-config-schema.json')
@@ -29,75 +95,20 @@ describe('test', function () {
     // console.log(data)
   })
 
-  it.only('should create a dataset from a public API without pagination', async function () {
+  it('should get headers', async () => {
+    const headers = processing.headers(processingConfig.block)
+    assert.equal(headers.length, 10)
+  })
+
+  it('should create a dataset from a public API without pagination', async function () {
     const scope = nock('https://test.com')
       .get('/api/items')
       .reply(200, sites)
 
     const testsUtils = await import('@data-fair/lib/processings/tests-utils.js')
-    const title = 'Processing import API : sites'
     const context = testsUtils.context({
       pluginConfig: {},
-      processingConfig: {
-        datasetMode: 'create',
-        dataset: { title },
-        apiURL: 'https://test.com/api/items',
-        separator: ';',
-        block: {
-          expand: {
-            path: 'sites',
-            block: {
-              mapping: [{
-                key: 'site',
-                path: 'name'
-              }, {
-                key: 'address',
-                path: 'address'
-              },
-              {
-                key: 'zip',
-                path: 'zip_code'
-              },
-              {
-                key: 'city',
-                path: 'city'
-              }],
-              expand: {
-                path: 'events',
-                block: {
-                  mapping: [
-                    {
-                      key: 'title',
-                      path: 'title'
-                    }, {
-                      key: 'synopsis',
-                      path: 'synopsis'
-                    }
-                  ],
-                  expand: {
-                    path: 'sessions',
-                    block: {
-                      mapping: [
-                        {
-                          key: 'date',
-                          path: 'date'
-                        }, {
-                          key: 'features',
-                          path: 'features'
-                        },
-                        {
-                          key: 'url',
-                          path: 'booking_url'
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
+      processingConfig,
       tmpDir: 'data'
     }, config, true)
     await processing.run(context)
@@ -109,7 +120,7 @@ describe('test', function () {
     try {
       await context.ws.waitForJournal(datasetId, 'finalize-end')
       const dataset = (await context.axios.get(`api/v1/datasets/${datasetId}`)).data
-      assert.equal(dataset.schema.filter(p => !p['x-calculated']).length, 9)
+      assert.equal(dataset.schema.filter(p => !p['x-calculated']).length, 10)
       assert.equal(dataset.count, 1196)
       // assert.equal(dataset.schema[0].key, 'id')
       // assert.equal(dataset.schema[1].key, 'infoname')

@@ -62,6 +62,13 @@ function process (data, block, separator, common = {}) {
   } else return [{ ...base, ...common }]
 }
 
+const headersFromConfig = exports.headers = function (block) {
+  const base = (block.mapping || []).map(m => m.key)
+  if (block.expand && block.expand.path) {
+    return base.concat(headersFromConfig(block.expand.block))
+  } else return base
+}
+
 /**
  *
  * @param {import('./lib/types.mjs').JSONMappingProcessingContext} context
@@ -83,6 +90,7 @@ exports.run = async (context) => {
   let nextPageURL = await getPageUrl(context, linesOffset, pagesOffset)
   const filename = slugify(processingConfig.dataset.title, { lower: true, strict: true }) + '.csv'
   const writeStream = fs.createWriteStream(path.join(tmpDir, filename), { flags: 'w' })
+  const columns = headersFromConfig(processingConfig.block)
 
   while (nextPageURL) {
     await log.info(`Récupération de ${nextPageURL}`)
@@ -110,8 +118,8 @@ exports.run = async (context) => {
     linesOffset += data.length
     nextPageURL = await getPageUrl(context, linesOffset, pagesOffset, data, data)
 
-    await log.info(`Creéation de ${lines.length} lignes`)
-    await writeStream.write(stringify(lines, { header: true }))
+    await log.info(`Création de ${lines.length} lignes`)
+    await writeStream.write(stringify(lines, { header: true, columns }))
   }
   await log.step('Chargement des données')
   const formData = new FormData()
