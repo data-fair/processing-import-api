@@ -122,20 +122,42 @@ describe('test', function () {
       const dataset = (await context.axios.get(`api/v1/datasets/${datasetId}`)).data
       assert.equal(dataset.schema.filter(p => !p['x-calculated']).length, 10)
       assert.equal(dataset.count, 1196)
-      // assert.equal(dataset.schema[0].key, 'id')
-      // assert.equal(dataset.schema[1].key, 'infoname')
-      // assert.equal(dataset.schema[1].title, 'info.name')
-      // assert.equal(dataset.schema[2].key, 'infoprice')
-      // assert.equal(dataset.schema[2].title, 'info.price')
-
-      // const lines = (await context.axios.get(`api/v1/datasets/${datasetId}/lines`)).data.results
-      // assert.equal(lines.length, 3)
-      // assert.equal(lines[0].id, 1)
-      // assert.equal(lines[0].infoname, 'item1 changed')
-      // assert.equal(lines[0].infoprice, 41)
     } finally {
       await context.axios.delete(`api/v1/datasets/${datasetId}`)
     }
+  })
+
+  it('should create a dataset from a public API without pagination', async function () {
+    const scope = nock('https://api.insee.fr')
+      .get('/entreprises/sirene/V3.11/siret')
+      .reply(200, require('./sirene.json'))
+
+    const testsUtils = await import('@data-fair/lib/processings/tests-utils.js')
+    const context = testsUtils.context({
+      pluginConfig: {},
+      processingConfig: {
+        block: {
+          mapping: [
+            {
+              key: 'siret',
+              path: 'siret'
+            },
+            {
+              key: 'denominationUniteLegale',
+              path: 'uniteLegale.denominationUniteLegale'
+            }
+          ]
+        },
+        separator: ',',
+        apiURL: 'https://api.insee.fr/entreprises/sirene/V3.11/siret',
+        resultsPath: 'etablissements',
+        datasetMode: 'create',
+        dataset: { title: 'Sirene' }
+      },
+      tmpDir: 'data'
+    }, config, true)
+    await processing.run(context, true)
+    assert.ok(scope.isDone())
   })
 
   // it.skip('should use oauth connection to insee API', async function () {

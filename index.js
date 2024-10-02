@@ -70,7 +70,7 @@ const headersFromConfig = exports.headers = function (block) {
  *
  * @param {import('./lib/types.mjs').JSONMappingProcessingContext} context
  */
-exports.run = async (context) => {
+exports.run = async (context, noUpload = false) => {
   const { processingConfig, processingId, tmpDir, axios, log, patchConfig } = context
 
   // ------------------ Récupération, conversion et envoi des données ------------------
@@ -102,7 +102,7 @@ exports.run = async (context) => {
       break
     }
     await log.info(`Conversion de ${data.length || 1} lignes`)
-    const lines = [].concat(...(Array.isArray(data) ? data : [data]).map(d => process(data, processingConfig.block, processingConfig.separator)))
+    const lines = [].concat(...(Array.isArray(data) ? data : [data]).map(d => process(d, processingConfig.block, processingConfig.separator)))
 
     if (lines.length === 0) {
       await log.warning('Aucune donnée n\'a été récupérée')
@@ -118,30 +118,32 @@ exports.run = async (context) => {
     await log.info(`Création de ${lines.length} lignes`)
     await writeStream.write(stringify(lines, { header: true, columns }))
   }
-  await log.step('Chargement des données')
-  const formData = new FormData()
-  formData.append('title', processingConfig.dataset.title)
-  formData.append('extras', JSON.stringify({ processingId }))
-  formData.append('file', fs.createReadStream(path.join(tmpDir, filename)), { filename })
-  formData.getLength = util.promisify(formData.getLength)
+  if (!noUpload) {
+    await log.step('Chargement des données')
+    const formData = new FormData()
+    formData.append('title', processingConfig.dataset.title)
+    formData.append('extras', JSON.stringify({ processingId }))
+    formData.append('file', fs.createReadStream(path.join(tmpDir, filename)), { filename })
+    formData.getLength = util.promisify(formData.getLength)
 
-  try {
-    const dataset = (await axios({
-      method: 'post',
-      url: 'api/v1/datasets/' + (processingConfig.dataset.id || ''),
-      data: formData,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
-    })).data
-    await log.info(`jeu de donnée ${processingConfig.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
-    if (processingConfig.datasetMode === 'create') {
-      await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title } })
+    try {
+      const dataset = (await axios({
+        method: 'post',
+        url: 'api/v1/datasets/' + (processingConfig.dataset.id || ''),
+        data: formData,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
+      })).data
+      await log.info(`jeu de donnée ${processingConfig.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
+      if (processingConfig.datasetMode === 'create') {
+        await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title } })
+      }
+    } catch (err) {
+      console.log(JSON.stringify(err, null, 2))
     }
-  } catch (err) {
-    console.log(JSON.stringify(err, null, 2))
+    await log.info('Toutes les données ont été envoyées')
+    await log.info('Suppression du fichier CSV temporaire')
+    fs.unlinkSync(path.join(tmpDir, filename))
   }
-  await log.info('Toutes les données ont été envoyées')
-  await log.info('Suppression du fichier CSV temporaire')
-  fs.unlinkSync(path.join(tmpDir, filename))
 }
