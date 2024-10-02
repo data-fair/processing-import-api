@@ -102,7 +102,7 @@ exports.run = async (context) => {
       break
     }
     await log.info(`Conversion de ${data.length || 1} lignes`)
-    const lines = process(data, processingConfig.block, processingConfig.separator)
+    const lines = [].concat(...(Array.isArray(data) ? data : [data]).map(d => process(data, processingConfig.block, processingConfig.separator)))
 
     if (lines.length === 0) {
       await log.warning('Aucune donnée n\'a été récupérée')
@@ -113,7 +113,7 @@ exports.run = async (context) => {
 
     if (processingConfig.pagination?.offsetPages) offset++
     else offset += data.length
-    nextPageURL = await getPageUrl(context, offset, data, data)
+    nextPageURL = await getPageUrl(context, offset, results.data, (Array.isArray(data) ? data : [data]))
 
     await log.info(`Création de ${lines.length} lignes`)
     await writeStream.write(stringify(lines, { header: true, columns }))
