@@ -267,7 +267,6 @@ describe('test', function () {
   //       pagination: {
   //         method: 'queryParams',
   //         offsetKey: 'offset',
-  //         offsetFrom0: true,
   //         limitKey: 'limit',
   //         limitValue: 2
   //       },

@@ -9,12 +9,11 @@ const slugify = require('slugify')
 
 /**
  * @param {import('./lib/types.mjs').JSONMappingProcessingContext} context
- * @param {number} linesOffset
- * @param {number} pagesOffset
+ * @param {number} offset
  * @param {any} [data]
  * @param {any[]} [lines]
  */
-async function getPageUrl (context, linesOffset, pagesOffset, data, lines) {
+async function getPageUrl (context, offset, data, lines) {
   const url = context.processingConfig.apiURL
   const paginationConfig = context.processingConfig.pagination
 
@@ -29,8 +28,6 @@ async function getPageUrl (context, linesOffset, pagesOffset, data, lines) {
       await context.log.debug(`Limit parameter: ${paginationConfig.limitKey}=${paginationConfig.limitValue}`)
       urlObj.searchParams.set(paginationConfig.limitKey, paginationConfig.limitValue + '')
     }
-    let offset = paginationConfig.offsetPages ? pagesOffset : linesOffset
-    if (!paginationConfig.offsetFrom0) offset++
     await context.log.debug(`Offset parameter: ${paginationConfig.offsetKey}=${offset}`)
     urlObj.searchParams.set(paginationConfig.offsetKey, offset + '')
     return urlObj.href
@@ -84,22 +81,22 @@ exports.run = async (context) => {
     headers = { ...headers, ...authHeader }
   }
 
-  let linesOffset = 0
-  let pagesOffset = 0
+  let offset = processingConfig.pagination?.offsetPages ? 1 : 0
   /** @type {string | null} */
-  let nextPageURL = await getPageUrl(context, linesOffset, pagesOffset)
+  let nextPageURL = await getPageUrl(context, offset)
   const filename = slugify(processingConfig.dataset.title, { lower: true, strict: true }) + '.csv'
   const writeStream = fs.createWriteStream(path.join(tmpDir, filename), { flags: 'w' })
   const columns = headersFromConfig(processingConfig.block)
 
   while (nextPageURL) {
     await log.info(`Récupération de ${nextPageURL}`)
-    const { data } = await axios({
+    const results = await axios({
       method: 'get',
       url: nextPageURL,
       headers,
       timeout: 10 * 60000 // very long timeout as we don't control the API and some export logic are very slow
     })
+    const data = getValueByPath(results.data, processingConfig.resultsPath)
     if (!data) {
       await log.warning('Aucune donnée n\'a été récupérée')
       break
@@ -114,9 +111,9 @@ exports.run = async (context) => {
       await log.warning('Le nombre de lignes est trop important, privilégier une pagination plus petite.')
     }
 
-    pagesOffset++
-    linesOffset += data.length
-    nextPageURL = await getPageUrl(context, linesOffset, pagesOffset, data, data)
+    if (processingConfig.pagination?.offsetPages) offset++
+    else offset += data.length
+    nextPageURL = await getPageUrl(context, offset, data, data)
 
     await log.info(`Création de ${lines.length} lignes`)
     await writeStream.write(stringify(lines, { header: true, columns }))

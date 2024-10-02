@@ -281,12 +281,6 @@
                   "description": "Ce paramètre est utilisé pour progresser dans la pagination. Il est incrémenté à chaque appel. (ex: offset ou skip)",
                   "default": "offset"
                 },
-                "offsetFrom0": {
-                  "type": "boolean",
-                  "title": "Commencer à 0",
-                  "description": "Commence la pagination à 0. Par défaut, la pagination commence à 1.",
-                  "default": false
-                },
                 "offsetPages": {
                   "type": "boolean",
                   "title": "Offset en nombre de pages",
@@ -314,6 +308,12 @@
       "title": "Champs à récupérer",
       "required": ["block"],
       "properties": {
+        "resultsPath": {
+          "type": "string",
+          "title": "Chemin des résultats",
+          "description": "Chemin d'accès du tableau de résultats dans le json",
+          "default": ""
+        },
         "block": { "$ref": "#/definitions/block" },
         "separator": {
           "type": "string",
