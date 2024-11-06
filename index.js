@@ -51,7 +51,7 @@ function process (data, block, separator, common = {}) {
     base = Object.assign({}, ...block.mapping.map(m => {
       const values = getValueByPath(data, m.path)
       if (values == null) return {}
-      return { [m.key]: (typeof values === 'object') ? values.join(separator) : getValueByPath(data, m.path) }
+      return { [m.key]: (values.constructor === Array) ? values.join(separator) : getValueByPath(data, m.path) }
     }))
   }
   if (block.expand && block.expand.path) {
