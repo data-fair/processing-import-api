@@ -1,6 +1,6 @@
 {
   "name": "@data-fair/processing-import-api",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Create a data-fair dataset from an API",
   "main": "index.js",
   "directories": {
