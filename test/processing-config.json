@@ -1,0 +1,39 @@
+{
+  "datasetMode": "create",
+  "dataset": { "title": "Processing import API : sites" },
+  "apiURL": "https://test.com/api/items",
+  "separator": ";",
+  "block": {
+    "expand": {
+      "path": "sites",
+      "block": {
+        "mapping": [
+          { "key": "site", "path": "name" },
+          { "key": "address", "path": "address" },
+          { "key": "zip", "path": "zip_code" },
+          { "key": "city", "path": "city" }
+        ],
+        "expand": {
+          "path": "events",
+          "block": {
+            "mapping": [
+              { "key": "title", "path": "title" },
+              { "key": "synopsis", "path": "synopsis" }
+            ],
+            "expand": {
+              "path": "sessions",
+              "block": {
+                "mapping": [
+                  { "key": "date", "path": "date" },
+                  { "key": "features", "path": "features" },
+                  { "key": "url", "path": "booking_url" },
+                  { "key": "headline", "path": "headline" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

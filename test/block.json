@@ -1,0 +1,98 @@
+{
+  "expand": {
+    "path": "Cinema.Films",
+    "block": {
+      "expand": {
+        "path": "Seances",
+        "block": {
+          "mapping": [
+            {
+              "key": "ShowId",
+              "path": "IDSeanceCaisse"
+            },
+            {
+              "key": "ShowStart",
+              "path": "Debut"
+            },
+            {
+              "key": "ShowEnd",
+              "path": "Fin"
+            },
+            {
+              "key": "FilmVersion",
+              "path": "Version"
+            },
+            {
+              "key": "AuditoriumNumber",
+              "path": "SalleNumero"
+            },
+            {
+              "key": "ShowUrl",
+              "path": "UrlReservation"
+            }
+          ]
+        }
+      },
+      "mapping": [
+        {
+          "key": "FilmId",
+          "path": "CodeFilmAlloCine"
+        },
+        {
+          "key": "FilmTitle",
+          "path": "Titre"
+        },
+        {
+          "key": "FilmDirector",
+          "path": "Realisateur"
+        },
+        {
+          "key": "FilmCast",
+          "path": "Interpretes"
+        },
+        {
+          "key": "FilmSN",
+          "path": "DateSortie"
+        },
+        {
+          "key": "FilmGenre",
+          "path": "Genre"
+        },
+        {
+          "key": "FilmStoryline",
+          "path": "Resume"
+        },
+        {
+          "key": "FilmPoster",
+          "path": "Affiche"
+        },
+        {
+          "key": "FilmDuration",
+          "path": "Runtime"
+        },
+        {
+          "key": "FilmCountry",
+          "path": "Origine"
+        }
+      ]
+    }
+  },
+  "mapping": [
+    {
+      "key": "CineId",
+      "path": "Cinema.IdUserCoteCine"
+    },
+    {
+      "key": "CineNom",
+      "path": "Cinema.Nom"
+    },
+    {
+      "key": "CineAdresse",
+      "path": "Cinema.Adresse"
+    },
+    {
+      "key": "CineVille",
+      "path": "Cinema.Ville"
+    }
+  ]
+}

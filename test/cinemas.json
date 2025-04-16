@@ -1,0 +1,811 @@
+{
+  "Cinema": {
+    "IdUserCoteCine": "1854",
+    "UrlHomepage": "https://cafedesimages-vad.cotecine.fr/",
+    "Nom": "H\u00e9rouville-Saint-Clair - Caf\u00e9 des Images",
+    "Ville": "H\u00e9rouville-Saint-Clair",
+    "Adresse": "4 square du th\u00e9\u00e2tre",
+    "CodeCinemaAlloCine": "P0099",
+    "DateProgModif": "2025-04-16T11:27:34+02:00",
+    "Films": {
+      "579664": {
+        "IdFilmCoteCine": 579664,
+        "CodeFilmAlloCine": 317091,
+        "Titre": "Lire Lolita \u00e0 T\u00e9h\u00e9ran",
+        "TitreOriginal": "Reading Lolita in Tehran",
+        "Realisateur": "Eran Riklis",
+        "Interpretes": "Golshifteh Farahani, Zar Amir Ebrahimi, Mina Kavani, Bahar Beihaghi, Isabella Nefar",
+        "Runtime": 107,
+        "DateSortie": "26/03/2025",
+        "Duree": "107",
+        "Genre": "drame",
+        "Origine": "Italie, Isra\u00ebl",
+        "Resume": "Azar Nafisi, professeure \u00e0 l'universit\u00e9 de T\u00e9h\u00e9ran, r\u00e9unit secr\u00e8tement sept de ses \u00e9tudiantes pour lire des classiques de la litt\u00e9rature occidentale interdits par le r\u00e9gime. Alors que les fondamentalistes sont au pouvoir, ces femmes se retrouvent, retirent leur voile et discutent de leurs espoirs, de leurs amours et de leur place dans une soci\u00e9t\u00e9 de plus en plus oppressive. Pour elles, lire Lolita \u00e0 T\u00e9h\u00e9ran, c'est c\u00e9l\u00e9brer le pouvoir lib\u00e9rateur de la litt\u00e9rature.",
+        "Interdiction": "Tout public avec avertissement : Tout public avec avertissement",
+        "NbSemaineProg": 4,
+        "Prochainement": false,
+        "Affiche": "https://fr.web.img4.acsta.net/img/ed/1c/ed1c2eae98cbba6fa39b64a660f8f5d8.jpg",
+        "Photos": [
+          {
+            "Src": "https://fr.web.img4.acsta.net/img/9c/0f/9c0fa06ac8aefa371e8fcaf8792ae779.jpg",
+            "Titre": "Photo 1"
+          },
+          {
+            "Src": "https://fr.web.img5.acsta.net/img/77/fc/77fc00160096e74e61408a50bf84be05.jpg",
+            "Titre": "Photo 2"
+          },
+          {
+            "Src": "https://fr.web.img3.acsta.net/img/e3/c6/e3c699f4ccc5684d246e37b21fa85558.jpg",
+            "Titre": "Photo 3"
+          }
+        ],
+        "Videos": [
+          {
+            "Titre": "Lire Lolita \u00e0 T\u00e9h\u00e9ran Bande-annonce VO STFR",
+            "Capture": "https://fr.web.img2.acsta.net/img/32/e6/32e659a2182cfba85c0a4f2d735785de.jpg",
+            "PlayerEmbed": "https://player.allocine.fr/20615721.html",
+            "SrcMP4": "https://fr.vid.web.acsta.net/nmedia/33/25/02/03/15/02/20615721_hd_013.mp4"
+          }
+        ],
+        "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F579664/",
+        "DateSeancesModif": "2025-04-10T15:24:26+02:00",
+        "DateFilmInfosModif": "2025-03-24T15:01:32+01:00",
+        "Seances": [
+          {
+            "Debut": "2025-04-17T17:00:00+02:00",
+            "Version": "VO",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F579664/D1744902000/VO/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-17T18:55:00+02:00",
+            "IDSeanceCaisse": 239530
+          },
+          {
+            "Debut": "2025-04-18T12:15:00+02:00",
+            "Version": "VO",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F579664/D1744971300/VO/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-18T14:10:00+02:00",
+            "IDSeanceCaisse": 239531
+          },
+          {
+            "Debut": "2025-04-19T21:00:00+02:00",
+            "Version": "VO",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F579664/D1745089200/VO/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-19T22:55:00+02:00",
+            "IDSeanceCaisse": 239532
+          },
+          {
+            "Debut": "2025-04-20T12:15:00+02:00",
+            "Version": "VO",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F579664/D1745144100/VO/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-20T14:10:00+02:00",
+            "IDSeanceCaisse": 239533
+          },
+          {
+            "Debut": "2025-04-21T12:15:00+02:00",
+            "Version": "VO",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F579664/D1745230500/VO/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-21T14:10:00+02:00",
+            "IDSeanceCaisse": 239534
+          }
+        ]
+      },
+      "604926": {
+        "IdFilmCoteCine": 604926,
+        "CodeFilmAlloCine": 1000004184,
+        "Titre": "La R\u00e9paration",
+        "Realisateur": "R\u00e9gis Wargnier",
+        "Interpretes": "Julia de Nunez, Clovis Cornillac, Julien De Saint-Jean, J.C. Lin, Louis-do De Lencquesaing",
+        "Runtime": 104,
+        "DateSortie": "16/04/2025",
+        "Duree": "104",
+        "Genre": "drame",
+        "Origine": "France",
+        "Resume": "Quelques heures avant l'attribution de sa 3\u00e8me \u00e9toile, le c\u00e9l\u00e8bre chef Paskal Jankovski disparait avec son second lors d'une partie de chasse. A 20 ans, sa fille Clara se retrouve seule aux commandes du restaurant. Deux ans plus tard, elle re\u00e7oit une myst\u00e9rieuse invitation pour Ta\u00efwan... ",
+        "Interdiction": "Tous publics",
+        "NbSemaineProg": 1,
+        "Prochainement": false,
+        "Affiche": "https://fr.web.img2.acsta.net/img/17/e3/17e345631d36e68dba50ee5b4954bac3.jpg",
+        "Photos": [
+          {
+            "Src": "https://fr.web.img5.acsta.net/img/30/68/30687f62f2ec247c67f096e5fcaf10d6.jpg",
+            "Titre": "Photo 1"
+          },
+          {
+            "Src": "https://fr.web.img2.acsta.net/img/fb/78/fb788e5ce18c8064a20072eaf0dce065.jpg",
+            "Titre": "Photo 2"
+          },
+          {
+            "Src": "https://fr.web.img4.acsta.net/img/5e/0f/5e0f1972ac402a1fc78037247b8c8cb3.jpg",
+            "Titre": "Photo 3"
+          },
+          {
+            "Src": "https://fr.web.img2.acsta.net/img/43/8e/438ef40a6eb68860c3f8bd64cd7480e8.jpg",
+            "Titre": "Photo 4"
+          },
+          {
+            "Src": "https://fr.web.img2.acsta.net/img/9c/3a/9c3ab3b0eb9028a05bfa5206d4a23b2b.jpg",
+            "Titre": "Photo 5"
+          }
+        ],
+        "Videos": [
+          {
+            "Titre": "La R\u00e9paration Bande-annonce VF",
+            "Capture": "https://fr.web.img2.acsta.net/img/e7/15/e71573b9deb01b00de302ea0774ecf9e.jpg",
+            "PlayerEmbed": "https://player.allocine.fr/20617330.html",
+            "SrcMP4": "https://fr.vid.web.acsta.net/nmedia/33/25/03/06/10/10/20617330_hd_013.mp4"
+          }
+        ],
+        "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/",
+        "DateSeancesModif": "2025-04-10T17:48:24+02:00",
+        "DateFilmInfosModif": "2025-02-27T14:41:20+01:00",
+        "Seances": [
+          {
+            "Debut": "2025-04-16T13:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1744801200/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-16T14:52:00+02:00",
+            "IDSeanceCaisse": 239664
+          },
+          {
+            "Debut": "2025-04-16T18:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1744821000/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-16T20:22:00+02:00",
+            "IDSeanceCaisse": 239665
+          },
+          {
+            "Debut": "2025-04-17T11:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1744880400/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-17T12:52:00+02:00",
+            "IDSeanceCaisse": 239666
+          },
+          {
+            "Debut": "2025-04-17T19:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1744910100/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-17T21:07:00+02:00",
+            "IDSeanceCaisse": 239667
+          },
+          {
+            "Debut": "2025-04-18T12:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1744972200/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-18T14:22:00+02:00",
+            "IDSeanceCaisse": 239668
+          },
+          {
+            "Debut": "2025-04-18T19:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1744995600/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-18T20:52:00+02:00",
+            "IDSeanceCaisse": 239669
+          },
+          {
+            "Debut": "2025-04-19T12:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745056800/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-19T13:52:00+02:00",
+            "IDSeanceCaisse": 239670
+          },
+          {
+            "Debut": "2025-04-19T19:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745082900/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-19T21:07:00+02:00",
+            "IDSeanceCaisse": 239671
+          },
+          {
+            "Debut": "2025-04-20T12:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745143200/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-20T13:52:00+02:00",
+            "IDSeanceCaisse": 239672
+          },
+          {
+            "Debut": "2025-04-20T21:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745175600/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-20T22:52:00+02:00",
+            "IDSeanceCaisse": 239673
+          },
+          {
+            "Debut": "2025-04-21T14:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745237700/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-21T16:07:00+02:00",
+            "IDSeanceCaisse": 239674
+          },
+          {
+            "Debut": "2025-04-21T21:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745262000/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-21T22:52:00+02:00",
+            "IDSeanceCaisse": 239675
+          },
+          {
+            "Debut": "2025-04-22T13:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745319600/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-22T14:52:00+02:00",
+            "IDSeanceCaisse": 239676
+          },
+          {
+            "Debut": "2025-04-22T15:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745326800/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-22T16:52:00+02:00",
+            "IDSeanceCaisse": 239677
+          },
+          {
+            "Debut": "2025-04-23T12:25:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745403900/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-23T14:17:00+02:00",
+            "IDSeanceCaisse": 239686
+          },
+          {
+            "Debut": "2025-04-23T17:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745421300/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-23T19:07:00+02:00",
+            "IDSeanceCaisse": 239687
+          },
+          {
+            "Debut": "2025-04-24T12:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745489700/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-24T14:07:00+02:00",
+            "IDSeanceCaisse": 239688
+          },
+          {
+            "Debut": "2025-04-24T15:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745501400/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-24T17:22:00+02:00",
+            "IDSeanceCaisse": 239689
+          },
+          {
+            "Debut": "2025-04-25T15:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745586000/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-25T16:52:00+02:00",
+            "IDSeanceCaisse": 239690
+          },
+          {
+            "Debut": "2025-04-25T19:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745601300/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-25T21:07:00+02:00",
+            "IDSeanceCaisse": 239691
+          },
+          {
+            "Debut": "2025-04-26T12:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745663400/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-26T14:22:00+02:00",
+            "IDSeanceCaisse": 239692
+          },
+          {
+            "Debut": "2025-04-26T19:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745686800/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-26T20:52:00+02:00",
+            "IDSeanceCaisse": 239693
+          },
+          {
+            "Debut": "2025-04-27T12:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745748900/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-27T14:07:00+02:00",
+            "IDSeanceCaisse": 239694
+          },
+          {
+            "Debut": "2025-04-27T19:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745774100/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-27T21:07:00+02:00",
+            "IDSeanceCaisse": 239695
+          },
+          {
+            "Debut": "2025-04-28T19:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745859600/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-28T20:52:00+02:00",
+            "IDSeanceCaisse": 239696
+          },
+          {
+            "Debut": "2025-04-29T12:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745921700/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-29T14:07:00+02:00",
+            "IDSeanceCaisse": 239697
+          },
+          {
+            "Debut": "2025-04-29T16:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F604926/D1745937000/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-29T18:22:00+02:00",
+            "IDSeanceCaisse": 239698
+          }
+        ]
+      },
+      "371170": {
+        "IdFilmCoteCine": 371170,
+        "CodeFilmAlloCine": 291595,
+        "Visa": 156349,
+        "Titre": "Oxana",
+        "Realisateur": "Charl\u00e8ne Favier",
+        "Interpretes": "Albina Korzh, Maryna Koshkina, Lada Korovai, Oksana Zhdanova, No\u00e9e Abita",
+        "Runtime": 103,
+        "Duree": "103",
+        "Genre": "Biopic, drame",
+        "Origine": "France",
+        "Resume": "Ukraine, 2008. La jeune Oxana et son groupe d'amies multiplient les actions, slogans peints sur le corps et couronnes de fleurs dans les cheveux, contre un gouvernement arbitraire et corrompu. C'est la naissance d'un des mouvements les plus importants du XXIe si\u00e8cle : FEMEN. R\u00e9fugi\u00e9e politique, artiste, activiste, Oxana franchira les fronti\u00e8res et militera sans rel\u00e2che pour les droits des femmes et la libert\u00e9, jusqu'\u00e0 risquer sa propre vie.",
+        "Interdiction": "Tous publics",
+        "NbSemaineProg": 1,
+        "Prochainement": false,
+        "Affiche": "https://fr.web.img4.acsta.net/img/5b/fe/5bfef23c5eba4413c1f18c16eae043c2.jpg",
+        "Photos": [
+          {
+            "Src": "https://fr.web.img4.acsta.net/img/eb/b1/ebb1945008b8cd26708901a0aee71c6b.jpg",
+            "Titre": "Photo 1"
+          },
+          {
+            "Src": "https://fr.web.img6.acsta.net/img/90/14/9014f1a344a20b19cb44657b050f96b1.jpg",
+            "Titre": "Photo 2"
+          },
+          {
+            "Src": "https://fr.web.img2.acsta.net/img/b5/f0/b5f029f86c419e44f4d206cf750ae4ed.jpg",
+            "Titre": "Photo 3"
+          },
+          {
+            "Src": "https://fr.web.img6.acsta.net/img/6a/9d/6a9d5e3f4d69db3071e2044dab810344.jpg",
+            "Titre": "Photo 4"
+          },
+          {
+            "Src": "https://fr.web.img6.acsta.net/img/70/97/709744f0653283a8af350446c8faf718.jpg",
+            "Titre": "Photo 5"
+          }
+        ],
+        "Videos": [
+          {
+            "Titre": "Oxana Bande-annonce VO STFR",
+            "Capture": "https://fr.web.img4.acsta.net/img/52/a7/52a7d321e4f8bc9359ea41f27ba0fe74.jpg",
+            "PlayerEmbed": "https://player.allocine.fr/20617635.html",
+            "SrcMP4": "https://fr.vid.web.acsta.net/nmedia/33/25/03/11/17/45/20617635_hd_013.mp4"
+          }
+        ],
+        "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/",
+        "DateSeancesModif": "2025-04-10T17:00:58+02:00",
+        "DateFilmInfosModif": "2025-04-02T22:40:42+02:00",
+        "Seances": [
+          {
+            "Debut": "2025-04-16T12:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1744799400/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-16T14:21:00+02:00",
+            "IDSeanceCaisse": 239636
+          },
+          {
+            "Debut": "2025-04-16T21:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1744830000/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-16T22:51:00+02:00",
+            "IDSeanceCaisse": 239637
+          },
+          {
+            "Debut": "2025-04-17T13:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1744887600/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-17T14:51:00+02:00",
+            "IDSeanceCaisse": 239638
+          },
+          {
+            "Debut": "2025-04-17T21:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1744917300/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-17T23:06:00+02:00",
+            "IDSeanceCaisse": 239639
+          },
+          {
+            "Debut": "2025-04-18T13:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1744974900/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-18T15:06:00+02:00",
+            "IDSeanceCaisse": 239640
+          },
+          {
+            "Debut": "2025-04-18T21:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745002800/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-18T22:51:00+02:00",
+            "IDSeanceCaisse": 239641
+          },
+          {
+            "Debut": "2025-04-19T16:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745073000/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-19T18:21:00+02:00",
+            "IDSeanceCaisse": 239642
+          },
+          {
+            "Debut": "2025-04-19T20:45:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745088300/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-19T22:36:00+02:00",
+            "IDSeanceCaisse": 239643
+          },
+          {
+            "Debut": "2025-04-20T13:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745146800/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-20T14:51:00+02:00",
+            "IDSeanceCaisse": 239644
+          },
+          {
+            "Debut": "2025-04-20T19:10:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745169000/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-20T21:01:00+02:00",
+            "IDSeanceCaisse": 239645
+          },
+          {
+            "Debut": "2025-04-21T12:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745230500/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-21T14:06:00+02:00",
+            "IDSeanceCaisse": 239646
+          },
+          {
+            "Debut": "2025-04-21T18:45:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745253900/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-21T20:36:00+02:00",
+            "IDSeanceCaisse": 239647
+          },
+          {
+            "Debut": "2025-04-22T16:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745331300/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-22T18:06:00+02:00",
+            "IDSeanceCaisse": 239648
+          },
+          {
+            "Debut": "2025-04-22T21:20:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745349600/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-22T23:11:00+02:00",
+            "IDSeanceCaisse": 239649
+          },
+          {
+            "Debut": "2025-04-23T16:45:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745419500/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-23T18:36:00+02:00",
+            "IDSeanceCaisse": 239650
+          },
+          {
+            "Debut": "2025-04-23T21:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745434800/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-23T22:51:00+02:00",
+            "IDSeanceCaisse": 239651
+          },
+          {
+            "Debut": "2025-04-24T16:45:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745505900/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-24T18:36:00+02:00",
+            "IDSeanceCaisse": 239652
+          },
+          {
+            "Debut": "2025-04-24T21:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745522100/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-24T23:06:00+02:00",
+            "IDSeanceCaisse": 239653
+          },
+          {
+            "Debut": "2025-04-25T12:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745575200/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-25T13:51:00+02:00",
+            "IDSeanceCaisse": 239654
+          },
+          {
+            "Debut": "2025-04-25T19:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745600400/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-25T20:51:00+02:00",
+            "IDSeanceCaisse": 239655
+          },
+          {
+            "Debut": "2025-04-26T17:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745679600/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-26T18:51:00+02:00",
+            "IDSeanceCaisse": 239656
+          },
+          {
+            "Debut": "2025-04-26T21:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745695800/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-26T23:21:00+02:00",
+            "IDSeanceCaisse": 239657
+          },
+          {
+            "Debut": "2025-04-27T12:15:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745748900/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-27T14:06:00+02:00",
+            "IDSeanceCaisse": 239658
+          },
+          {
+            "Debut": "2025-04-27T18:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745771400/VF/251374/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE FLEURS",
+            "SalleNumero": "1",
+            "Projection": "2D",
+            "Fin": "2025-04-27T20:21:00+02:00",
+            "IDSeanceCaisse": 239659
+          },
+          {
+            "Debut": "2025-04-28T12:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745836200/VF/251394/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE COUPOLE",
+            "SalleNumero": "3",
+            "Projection": "2D",
+            "Fin": "2025-04-28T14:21:00+02:00",
+            "IDSeanceCaisse": 239660
+          },
+          {
+            "Debut": "2025-04-28T21:00:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745866800/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-28T22:51:00+02:00",
+            "IDSeanceCaisse": 239661
+          },
+          {
+            "Debut": "2025-04-29T14:30:00+02:00",
+            "Version": "VF",
+            "UrlReservation": "https://cafedesimages-vad.cotecine.fr/resa-part/76/F371170/D1745929800/VF/251384/",
+            "Attributs": "HANDI NUM  HANDI",
+            "SalleNom": "SALLE TATI",
+            "SalleNumero": "2",
+            "Projection": "2D",
+            "Fin": "2025-04-29T16:21:00+02:00",
+            "IDSeanceCaisse": 239662
+          }
+        ]
+      }
+    }
+  }
+}

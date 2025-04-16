@@ -6,72 +6,10 @@ const assert = require('node:assert').strict
 const processing = require('../')
 const sites = require('./sites.json')
 const { getValueByPath } = require('../lib/utils')
-
-const title = 'Processing import API : sites'
-const processingConfig = {
-  datasetMode: 'create',
-  dataset: { title },
-  apiURL: 'https://test.com/api/items',
-  separator: ';',
-  block: {
-    expand: {
-      path: 'sites',
-      block: {
-        mapping: [{
-          key: 'site',
-          path: 'name'
-        }, {
-          key: 'address',
-          path: 'address'
-        },
-        {
-          key: 'zip',
-          path: 'zip_code'
-        },
-        {
-          key: 'city',
-          path: 'city'
-        }],
-        expand: {
-          path: 'events',
-          block: {
-            mapping: [
-              {
-                key: 'title',
-                path: 'title'
-              }, {
-                key: 'synopsis',
-                path: 'synopsis'
-              }
-            ],
-            expand: {
-              path: 'sessions',
-              block: {
-                mapping: [
-                  {
-                    key: 'date',
-                    path: 'date'
-                  }, {
-                    key: 'features',
-                    path: 'features'
-                  },
-                  {
-                    key: 'url',
-                    path: 'booking_url'
-                  },
-                  {
-                    key: 'headline',
-                    path: 'headline'
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
+const processingConfig = require('./processing-config.json')
+const title = processingConfig.dataset.title
+const block = require('./block.json')
+const cinemas = require('./cinemas.json')
 
 describe('test', function () {
   it('should expose a plugin config schema for super admins', async () => {
@@ -93,6 +31,11 @@ describe('test', function () {
     assert.equal(data.join('.'), [6, 7].join('.'))
     // data = getValueByPath(sites, 'sites.0.events[].sessions')
     // console.log(data)
+  })
+
+  it('should process a block', async () => {
+    const results = processing.process(cinemas, block, ';')
+    console.log(results.length)
   })
 
   it('should get headers', async () => {

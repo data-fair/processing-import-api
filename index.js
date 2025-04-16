@@ -45,7 +45,7 @@ async function getPageUrl (context, offset, data, lines) {
   }
 }
 
-function process (data, block, separator, common = {}) {
+const process = exports.process = function (data, block, separator, common = {}) {
   let base = {}
   if (block.mapping && block.mapping.length) {
     base = Object.assign({}, ...block.mapping.map(m => {
