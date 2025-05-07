@@ -27,7 +27,8 @@
   "devDependencies": {
     "@bcherny/json-schema-ref-parser": "^10.0.5-fork",
     "@commitlint/config-conventional": "^19.1.0",
-    "@data-fair/lib": "^0.32.0",
+    "@data-fair/lib-common-types": "^1.9.2",
+    "@data-fair/lib-processing-dev": "^0.1.0",
     "@types/config": "^3.3.3",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.30",

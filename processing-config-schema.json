@@ -96,7 +96,13 @@
                 },
                 "password": {
                   "type": "string",
-                  "title": "Mot de passe"
+                  "title": "Mot de passe",
+                  "layout": {
+                    "props": {
+                      "type": "password",
+                      "autocomplete": "new-password"
+                    }
+                  }
                 }
               }
             },
@@ -128,7 +134,13 @@
                 "apiKeyValue": {
                   "type": "string",
                   "title": "Valeur",
-                  "description": "Valeur de la clé"
+                  "description": "Valeur de la clé",
+                  "layout": {
+                    "props": {
+                      "type": "password",
+                      "autocomplete": "new-password"
+                    }
+                  }
                 }
               }
             },
@@ -167,7 +179,13 @@
                 },
                 "clientSecret": {
                   "type": "string",
-                  "title": "Client Secret"
+                  "title": "Client Secret",
+                  "layout": {
+                    "props": {
+                      "type": "password",
+                      "autocomplete": "new-password"
+                    }
+                  }
                 },
                 "username": {
                   "type": "string",
@@ -183,6 +201,12 @@
                   "x-if": "parent.value.grantType == 'password_credentials'",
                   "x-options": {
                     "evalMethod": "evalExpr"
+                  },
+                  "layout": {
+                    "props": {
+                      "type": "password",
+                      "autocomplete": "new-password"
+                    }
                   }
                 }
               }
@@ -207,7 +231,13 @@
                 "password": {
                   "type": "string",
                   "title": "Mot de passe",
-                  "default": ""
+                  "default": "",
+                  "layout": {
+                    "props": {
+                      "type": "password",
+                      "autocomplete": "new-password"
+                    }
+                  }
                 },
                 "tokenApp": {
                   "type": "string",

@@ -67,7 +67,6 @@ const headersFromConfig = exports.headers = function (block) {
 }
 
 /**
- *
  * @param {import('./lib/types.mjs').JSONMappingProcessingContext} context
  */
 exports.run = async (context, noUpload = false) => {
@@ -77,6 +76,12 @@ exports.run = async (context, noUpload = false) => {
   await log.step('Récupération et conversion des données')
   let headers = { Accept: 'application/json' }
   if (processingConfig.auth && processingConfig.auth.authMethod !== 'noAuth') {
+    for (const key of ['password', 'apiKeyValue', 'clientSecret']) {
+      if (processingConfig.auth[key] === '********' && context.secrets[key]) {
+        processingConfig.auth[key] = context.secrets[key]
+      }
+    }
+
     const authHeader = await getHeaders(processingConfig.auth, axios, log)
     headers = { ...headers, ...authHeader }
   }
@@ -146,5 +151,25 @@ exports.run = async (context, noUpload = false) => {
     await log.info('Toutes les données ont été envoyées')
     await log.info('Suppression du fichier CSV temporaire')
     fs.unlinkSync(path.join(tmpDir, filename))
+  }
+}
+
+/**
+ * @type {import('@data-fair/lib-common-types/processings.js').PrepareFunction}
+ */
+exports.prepare = async (context) => {
+  /** @type {Record<string, string>} */
+  const secrets = {}
+  const auth = context.processingConfig.auth
+  for (const key of ['password', 'apiKeyValue', 'clientSecret']) {
+    if (auth[key] && auth[key] !== '********' && auth[key] !== '') {
+      secrets[key] = auth[key]
+      auth[key] = '********'
+    }
+  }
+
+  return {
+    processingConfig: context.processingConfig,
+    secrets
   }
 }

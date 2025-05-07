@@ -48,7 +48,7 @@ describe('test', function () {
       .get('/api/items')
       .reply(200, sites)
 
-    const testsUtils = await import('@data-fair/lib/processings/tests-utils.js')
+    const testsUtils = await import('@data-fair/lib-processing-dev/tests-utils.js')
     const context = testsUtils.context({
       pluginConfig: {},
       processingConfig,
@@ -75,7 +75,7 @@ describe('test', function () {
       .get('/entreprises/sirene/V3.11/siret')
       .reply(200, require('./sirene.json'))
 
-    const testsUtils = await import('@data-fair/lib/processings/tests-utils.js')
+    const testsUtils = await import('@data-fair/lib-processing-dev/tests-utils.js')
     const context = testsUtils.context({
       pluginConfig: {},
       processingConfig: {
@@ -106,7 +106,7 @@ describe('test', function () {
   // it.skip('should use oauth connection to insee API', async function () {
   //   this.timeout(1000000)
 
-  //   const testsUtils = await import('@data-fair/lib/processings/tests-utils.js')
+  //   const testsUtils = await import('@data-fair/lib-processing-dev/tests-utils.js')
 
   //   const context = testsUtils.context({
   //     pluginConfig: {},
@@ -157,7 +157,7 @@ describe('test', function () {
   //       ]
   //     })
 
-  //   const testsUtils = await import('@data-fair/lib/processings/tests-utils.js')
+  //   const testsUtils = await import('@data-fair/lib-processing-dev/tests-utils.js')
   //   const context = testsUtils.context({
   //     pluginConfig: {},
   //     processingConfig: {
@@ -221,7 +221,7 @@ describe('test', function () {
   //       ]
   //     })
 
-  //   const testsUtils = await import('@data-fair/lib/processings/tests-utils.js')
+  //   const testsUtils = await import('@data-fair/lib-processing-dev/tests-utils.js')
   //   const context = testsUtils.context({
   //     pluginConfig: {},
   //     processingConfig: {
