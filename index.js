@@ -76,9 +76,11 @@ exports.run = async (context, noUpload = false) => {
   await log.step('Récupération et conversion des données')
   let headers = { Accept: 'application/json' }
   if (processingConfig.auth && processingConfig.auth.authMethod !== 'noAuth') {
-    for (const key of ['password', 'apiKeyValue', 'clientSecret']) {
-      if (processingConfig.auth[key] === '********' && context.secrets[key]) {
-        processingConfig.auth[key] = context.secrets[key]
+    if (context.secrets) {
+      for (const key of ['password', 'apiKeyValue', 'clientSecret']) {
+        if (processingConfig.auth[key] === '********' && context.secrets[key]) {
+          processingConfig.auth[key] = context.secrets[key]
+        }
       }
     }
 
