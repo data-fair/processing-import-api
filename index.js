@@ -159,19 +159,20 @@ exports.run = async (context, noUpload = false) => {
 /**
  * @type {import('@data-fair/lib-common-types/processings.js').PrepareFunction}
  */
-exports.prepare = async (context) => {
-  /** @type {Record<string, string>} */
-  const secrets = {}
-  const auth = context.processingConfig.auth
+exports.prepare = async ({ processingConfig, secrets }) => {
+  const auth = processingConfig.auth
   for (const key of ['password', 'apiKeyValue', 'clientSecret']) {
-    if (auth[key] && auth[key] !== '********' && auth[key] !== '') {
+    if (auth[key] && auth[key] !== '********') {
       secrets[key] = auth[key]
       auth[key] = '********'
+    }
+    if (!auth[key] && secrets[key]) {
+      delete secrets[key]
     }
   }
 
   return {
-    processingConfig: context.processingConfig,
+    processingConfig,
     secrets
   }
 }
