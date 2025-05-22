@@ -161,6 +161,8 @@ exports.run = async (context, noUpload = false) => {
  */
 exports.prepare = async ({ processingConfig, secrets }) => {
   const auth = processingConfig.auth
+  if (!auth) return { processingConfig, secrets }
+
   for (const key of ['password', 'apiKeyValue', 'clientSecret']) {
     if (auth[key] && auth[key] !== '********') {
       secrets[key] = auth[key]
