@@ -177,14 +177,14 @@
                   "title": "URL d'accès au token",
                   "description": "L'endpoint du serveur d'autorisation. Cela est utilisé pour obtenir le jeton d'accès.",
                   "layout": {
-                    "if": "parent.value.grantType === 'client_credentials'"
+                    "if": "parent.data.grantType === 'client_credentials'"
                   }
                 },
                 "clientId": {
                   "type": "string",
                   "title": "Client ID",
                   "layout": {
-                    "if": "parent.value.grantType === 'client_credentials'"
+                    "if": "parent.data.grantType === 'client_credentials'"
                   }
                 },
                 "clientSecret": {
@@ -195,21 +195,21 @@
                       "type": "password",
                       "autocomplete": "new-password"
                     },
-                    "if": "parent.value.grantType === 'client_credentials'"
+                    "if": "parent.data.grantType === 'client_credentials'"
                   }
                 },
                 "scope": {
                   "type": "string",
                   "title": "Scope",
                   "layout": {
-                    "if": "parent.value.grantType === 'client_credentials'"
+                    "if": "parent.data.grantType === 'client_credentials'"
                   }
                 },
                 "username": {
                   "type": "string",
                   "title": "Nom d'utilisateur",
                   "layout": {
-                    "if": "parent.value.grantType === 'password_credentials'"
+                    "if": "parent.data.grantType === 'password_credentials'"
                   }
                 },
                 "password": {
@@ -220,7 +220,7 @@
                       "type": "password",
                       "autocomplete": "new-password"
                     },
-                    "if": "parent.value.grantType === 'password_credentials'"
+                    "if": "parent.data.grantType === 'password_credentials'"
                   }
                 }
               }
