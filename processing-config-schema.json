@@ -38,10 +38,14 @@
             "dataset": {
               "type": "object",
               "title": "Jeu de donnée existant",
-              "x-fromUrl": "{context.dataFairUrl}/api/v1/datasets?q={q}&select=id,title&{context.ownerFilter}",
-              "x-itemsProp": "results",
-              "x-itemTitle": "title",
-              "x-itemKey": "id",
+              "layout": {
+                "getItems": {
+                  "url": "${context.dataFairUrl}/api/v1/datasets?q={q}&select=id,title&${context.ownerFilter}",
+                  "itemsResults": "data.results",
+                  "itemTitle": "item.title",
+                  "itemKey": "item.id"
+                }
+              },
               "properties": {
                 "id": {
                   "type": "string",
@@ -171,11 +175,17 @@
                 "tokenURL": {
                   "type": "string",
                   "title": "URL d'accès au token",
-                  "description": "L'endpoint du serveur d'autorisation. Cela est utilisé pour obtenir le jeton d'accès."
+                  "description": "L'endpoint du serveur d'autorisation. Cela est utilisé pour obtenir le jeton d'accès.",
+                  "layout": {
+                    "if": "parent.value.grantType === 'client_credentials'"
+                  }
                 },
                 "clientId": {
                   "type": "string",
-                  "title": "Client ID"
+                  "title": "Client ID",
+                  "layout": {
+                    "if": "parent.value.grantType === 'client_credentials'"
+                  }
                 },
                 "clientSecret": {
                   "type": "string",
@@ -184,29 +194,33 @@
                     "props": {
                       "type": "password",
                       "autocomplete": "new-password"
-                    }
+                    },
+                    "if": "parent.value.grantType === 'client_credentials'"
+                  }
+                },
+                "scope": {
+                  "type": "string",
+                  "title": "Scope",
+                  "layout": {
+                    "if": "parent.value.grantType === 'client_credentials'"
                   }
                 },
                 "username": {
                   "type": "string",
                   "title": "Nom d'utilisateur",
-                  "x-if": "parent.value.grantType == 'password_credentials'",
-                  "x-options": {
-                    "evalMethod": "evalExpr"
+                  "layout": {
+                    "if": "parent.value.grantType === 'password_credentials'"
                   }
                 },
                 "password": {
                   "type": "string",
                   "title": "Mot de passe",
-                  "x-if": "parent.value.grantType == 'password_credentials'",
-                  "x-options": {
-                    "evalMethod": "evalExpr"
-                  },
                   "layout": {
                     "props": {
                       "type": "password",
                       "autocomplete": "new-password"
-                    }
+                    },
+                    "if": "parent.value.grantType === 'password_credentials'"
                   }
                 }
               }
