@@ -47,21 +47,21 @@ async function getPageUrl (context, offset, data, lines) {
 
 const process = exports.process = function (data, block, separator, common = {}) {
   let base = {}
-  if (block.mapping && block.mapping.length) {
+  if (block?.mapping?.length) {
     base = Object.assign({}, ...block.mapping.map(m => {
       const values = getValueByPath(data, m.path)
       if (values == null) return {}
       return { [m.key]: (values.constructor === Array) ? values.join(separator) : getValueByPath(data, m.path) }
     }))
   }
-  if (block.expand && block.expand.path) {
+  if (block?.expand?.path) {
     return [].concat(...getValueByPath(data, block.expand.path).map(d => process(d, block.expand.block, separator, { ...base, ...common })))
   } else return [{ ...base, ...common }]
 }
 
 const headersFromConfig = exports.headers = function (block) {
-  const base = (block.mapping || []).map(m => m.key)
-  if (block.expand && block.expand.path) {
+  const base = (block?.mapping || []).map(m => m.key)
+  if (block?.expand?.path) {
     return base.concat(headersFromConfig(block.expand.block))
   } else return base
 }
