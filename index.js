@@ -123,7 +123,7 @@ exports.run = async (context, noUpload = false) => {
     nextPageURL = await getPageUrl(context, offset, results.data, (Array.isArray(data) ? data : [data]))
 
     await log.info(`Création de ${lines.length} lignes`)
-    await writeStream.write(stringify(lines, { header, columns }))
+    await writeStream.write(stringify(lines, { header, columns, quoted: true, quoted_string: true }))
     header = false
   }
   if (!noUpload) {

@@ -9,7 +9,7 @@
   "scripts": {
     "test": "mkdir -p data && mocha --exit -timeout 120000",
     "lint": "eslint .",
-    "prepare": "husky install"
+    "prepare": "husky || true"
   },
   "repository": {
     "type": "git",
@@ -44,7 +44,7 @@
     "eslint-config-standard": "^17.1.0",
     "eslint-config-standard-with-typescript": "^43.0.1",
     "eslint-plugin-no-only-tests": "^3.1.0",
-    "husky": "^9.0.11",
+    "husky": "^9.1.7",
     "json-schema-to-typescript": "^11.0.5",
     "mocha": "^10.2.0",
     "ncp": "^2.0.0",
