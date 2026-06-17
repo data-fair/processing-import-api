@@ -388,7 +388,7 @@
               "path": {
                 "type": "string",
                 "title": "Chemin de la colonne",
-                "description": "Chemin d'accès vers la donnée. Utilisez la notation par points pour naviguer dans les objets et `[]` pour extraire des données de tableaux.\n\n**Exemples de syntaxe :**\n\n* **Simple :** `owner.name` permet d'accéder à une propriété imbriquée.\n\n* **Tableau (Multivalué) :** `topics[].title` récupère tous les titres du tableau et les concatène dans un champ multivalué."
+                "description": "Chemin d'accès vers la donnée. Utilisez la notation par points pour naviguer dans les objets et `[]` pour extraire des données de tableaux.\n\n**Exemples de syntaxe :**\n\n* **Simple :** `owner.name` permet d'accéder à une propriété imbriquée.\n\n* **Tableau (Multivalué) :** `topics[].title` récupère tous les titres du tableau et les concatène dans un champ multivalué.\n\n* **Index précis :** `attributes.0` cible le premier élément d'un tableau, `attributes.1.title` le titre du deuxième. Utilisez le numéro de position (commence à 0), pas `[0]`."
               }
             }
           }
