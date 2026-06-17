@@ -1,24 +1,28 @@
-module.exports = async (auth, axios, log) => {
-  const headers = {}
+import type { AxiosInstance } from 'axios'
+import type { LogFunctions } from '@data-fair/lib-common-types/processings.js'
+import type { Auth } from './types.ts'
+
+export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Promise<Record<string, string>> => {
+  const headers: Record<string, string> = {}
 
   if (auth.authMethod === 'bearerAuth') headers.Authorization = `Bearer ${auth.token}`
   else if (auth.authMethod === 'basicAuth') headers.Authorization = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
-  else if (auth.authMethod === 'apiKey') headers[auth.apiKeyHeader] = auth.apiKeyValue
+  else if (auth.authMethod === 'apiKey') headers[auth.apiKeyHeader as string] = auth.apiKeyValue as string
   else if (auth.authMethod === 'oauth2') {
     const formData = new URLSearchParams()
 
-    formData.append('grant_type', auth.grantType)
-    formData.append('client_id', auth.clientId)
-    formData.append('client_secret', auth.clientSecret)
+    formData.append('grant_type', auth.grantType as string)
+    formData.append('client_id', auth.clientId as string)
+    formData.append('client_secret', auth.clientSecret as string)
     if (auth.scope?.length) formData.append('scope', auth.scope)
 
     if (auth.grantType === 'password_Credentials') {
-      formData.append('username', auth.username)
-      formData.append('password', auth.password)
+      formData.append('username', auth.username as string)
+      formData.append('password', auth.password as string)
     }
 
     try {
-      const res = await axios.post(auth.tokenURL, formData)
+      const res = await axios.post(auth.tokenURL as string, formData)
       headers.Authorization = `Bearer ${res.data.access_token}`
     } catch (e) {
       await log.error('Erreur lors de l\'obtention du token')
@@ -26,7 +30,7 @@ module.exports = async (auth, axios, log) => {
       throw new Error('Erreur lors de l\'obtention du token')
     }
   } else if (auth.authMethod === 'session') {
-    const headersSession = { 'Content-Type': 'application/json' }
+    const headersSession: Record<string, string> = { 'Content-Type': 'application/json' }
     if (auth.username && auth.password) {
       headersSession.Authorization = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
     } else if (auth.tokenUser) {
@@ -41,7 +45,7 @@ module.exports = async (auth, axios, log) => {
     }
 
     await log.debug(`Fetch GLPI session token with headers: ${JSON.stringify(Object.keys(headersSession))}`)
-    const sessionRes = await axios.get(auth.loginURL, { headers: headersSession })
+    const sessionRes = await axios.get(auth.loginURL as string, { headers: headersSession })
     if (sessionRes.data && sessionRes.data.session_token) {
       headers['Session-Token'] = sessionRes.data.session_token
     } else {

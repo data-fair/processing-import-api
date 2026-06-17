@@ -1,21 +1,20 @@
-const util = require('util')
-const FormData = require('form-data')
-const getHeaders = require('./lib/authentications')
-const { getValueByPath } = require('./lib/utils')
-const { stringify } = require('csv-stringify/sync')
-const fs = require('node:fs')
-const path = require('path')
-const slugify = require('slugify')
+import type { ProcessingContext, PrepareFunction } from '@data-fair/lib-common-types/processings.js'
+import type { ProcessingConfig } from './types/processingConfig/index.ts'
+import type { Auth, Block, PaginationConfig } from './lib/types.ts'
+import util from 'node:util'
+import fs from 'node:fs'
+import path from 'node:path'
+import FormData from 'form-data'
+import slugify from 'slugify'
+import { stringify } from 'csv-stringify/sync'
+import getAuthHeaders from './lib/authentications.ts'
+import { getValueByPath } from './lib/utils.ts'
 
-/**
- * @param {import('./lib/types.mjs').JSONMappingProcessingContext} context
- * @param {number} offset
- * @param {any} [data]
- * @param {any[]} [lines]
- */
-async function getPageUrl (context, offset, data, lines) {
-  const url = context.processingConfig.apiURL
-  const paginationConfig = context.processingConfig.pagination
+type ImportApiContext = ProcessingContext<ProcessingConfig>
+
+const getPageUrl = async (context: ImportApiContext, offset: number, data?: any, lines?: any[]): Promise<string | null> => {
+  const url = (context.processingConfig as any).apiURL as string
+  const paginationConfig = (context.processingConfig as any).pagination as PaginationConfig | undefined
 
   if (!paginationConfig || paginationConfig.method === 'none') return data ? null : url
   if (paginationConfig.method === 'queryParams') {
@@ -29,7 +28,7 @@ async function getPageUrl (context, offset, data, lines) {
       urlObj.searchParams.set(paginationConfig.limitKey, paginationConfig.limitValue + '')
     }
     await context.log.debug(`Offset parameter: ${paginationConfig.offsetKey}=${offset}`)
-    urlObj.searchParams.set(paginationConfig.offsetKey, offset + '')
+    urlObj.searchParams.set(paginationConfig.offsetKey as string, offset + '')
     return urlObj.href
   }
   if (paginationConfig.method === 'nextPageData') {
@@ -43,10 +42,14 @@ async function getPageUrl (context, offset, data, lines) {
     }
     return getValueByPath(data, paginationConfig.nextPagePath)
   }
+  return null
 }
 
-const process = exports.process = function (data, block, separator, common = {}) {
-  let base = {}
+/**
+ * Flatten a single data object into one or several CSV rows following the block configuration.
+ */
+export const flattenData = (data: any, block?: Block, separator = ';', common: Record<string, any> = {}): Array<Record<string, any>> => {
+  let base: Record<string, any> = {}
   if (block?.mapping?.length) {
     base = Object.assign({}, ...block.mapping.map(m => {
       const values = getValueByPath(data, m.path)
@@ -55,45 +58,45 @@ const process = exports.process = function (data, block, separator, common = {})
     }))
   }
   if (block?.expand?.path) {
-    return [].concat(...getValueByPath(data, block.expand.path).map(d => process(d, block.expand.block, separator, { ...base, ...common })))
+    return ([] as Array<Record<string, any>>).concat(...getValueByPath(data, block.expand.path).map((d: any) => flattenData(d, block.expand?.block, separator, { ...base, ...common })))
   } else return [{ ...base, ...common }]
 }
 
-const headersFromConfig = exports.headers = function (block) {
-  const base = (block?.mapping || []).map(m => m.key)
+/**
+ * Compute the ordered list of CSV columns from the block configuration.
+ */
+export const blockHeaders = (block?: Block): string[] => {
+  const base = (block?.mapping ?? []).map(m => m.key)
   if (block?.expand?.path) {
-    return base.concat(headersFromConfig(block.expand.block))
+    return base.concat(blockHeaders(block.expand.block))
   } else return base
 }
 
-/**
- * @param {import('./lib/types.mjs').JSONMappingProcessingContext} context
- */
-exports.run = async (context, noUpload = false) => {
+export const run = async (context: ImportApiContext, noUpload = false) => {
   const { processingConfig, processingId, tmpDir, axios, log, patchConfig } = context
+  const cfg = processingConfig as any
 
   // ------------------ Récupération, conversion et envoi des données ------------------
   await log.step('Récupération et conversion des données')
-  let headers = { Accept: 'application/json' }
-  if (processingConfig.auth && processingConfig.auth.authMethod !== 'noAuth') {
+  let headers: Record<string, string> = { Accept: 'application/json' }
+  if (cfg.auth && cfg.auth.authMethod !== 'noAuth') {
     if (context.secrets) {
       for (const key of ['password', 'apiKeyValue', 'clientSecret']) {
-        if (processingConfig.auth[key] === '********' && context.secrets[key]) {
-          processingConfig.auth[key] = context.secrets[key]
+        if (cfg.auth[key] === '********' && context.secrets[key]) {
+          cfg.auth[key] = context.secrets[key]
         }
       }
     }
 
-    const authHeader = await getHeaders(processingConfig.auth, axios, log)
+    const authHeader = await getAuthHeaders(cfg.auth as Auth, axios, log)
     headers = { ...headers, ...authHeader }
   }
 
-  let offset = processingConfig.pagination?.offsetPages ? 1 : 0
-  /** @type {string | null} */
-  let nextPageURL = await getPageUrl(context, offset)
-  const filename = slugify(processingConfig.dataset.title, { lower: true, strict: true }) + '.csv'
+  let offset = cfg.pagination?.offsetPages ? 1 : 0
+  let nextPageURL: string | null = await getPageUrl(context, offset)
+  const filename = slugify(cfg.dataset.title, { lower: true, strict: true }) + '.csv'
   const writeStream = fs.createWriteStream(path.join(tmpDir, filename), { flags: 'w' })
-  const columns = headersFromConfig(processingConfig.block)
+  const columns = blockHeaders(cfg.block)
   let header = true
   while (nextPageURL) {
     await log.info(`Récupération de ${nextPageURL}`)
@@ -103,13 +106,13 @@ exports.run = async (context, noUpload = false) => {
       headers,
       timeout: 10 * 60000 // very long timeout as we don't control the API and some export logic are very slow
     })
-    const data = getValueByPath(results.data, processingConfig.resultsPath)
+    const data = getValueByPath(results.data, cfg.resultsPath)
     if (!data) {
       await log.warning('Aucune donnée n\'a été récupérée')
       break
     }
     await log.info(`Conversion de ${data.length || 1} lignes`)
-    const lines = [].concat(...(Array.isArray(data) ? data : [data]).map(d => process(d, processingConfig.block, processingConfig.separator)))
+    const lines = ([] as Array<Record<string, any>>).concat(...(Array.isArray(data) ? data : [data]).map((d: any) => flattenData(d, cfg.block, cfg.separator)))
 
     if (lines.length === 0) {
       await log.warning('Aucune donnée n\'a été récupérée')
@@ -118,18 +121,18 @@ exports.run = async (context, noUpload = false) => {
       await log.warning('Le nombre de lignes est trop important, privilégier une pagination plus petite.')
     }
 
-    if (processingConfig.pagination?.offsetPages) offset++
+    if (cfg.pagination?.offsetPages) offset++
     else offset += data.length
     nextPageURL = await getPageUrl(context, offset, results.data, (Array.isArray(data) ? data : [data]))
 
     await log.info(`Création de ${lines.length} lignes`)
-    await writeStream.write(stringify(lines, { header, columns, quoted: true, quoted_string: true }))
+    await writeStream.write(stringify(lines, { header, columns, quoted: true }))
     header = false
   }
   if (!noUpload) {
     await log.step('Chargement des données')
-    const formData = new FormData()
-    formData.append('title', processingConfig.dataset.title)
+    const formData: any = new FormData()
+    formData.append('title', cfg.dataset.title)
     formData.append('extras', JSON.stringify({ processingId }))
     formData.append('file', fs.createReadStream(path.join(tmpDir, filename)), { filename })
     formData.getLength = util.promisify(formData.getLength)
@@ -137,14 +140,14 @@ exports.run = async (context, noUpload = false) => {
     try {
       const dataset = (await axios({
         method: 'post',
-        url: 'api/v1/datasets/' + (processingConfig.dataset.id || ''),
+        url: 'api/v1/datasets/' + (cfg.dataset.id || ''),
         data: formData,
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
         headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
       })).data
-      await log.info(`jeu de donnée ${processingConfig.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
-      if (processingConfig.datasetMode === 'create') {
+      await log.info(`jeu de donnée ${cfg.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
+      if (cfg.datasetMode === 'create') {
         await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title } })
       }
     } catch (err) {
@@ -156,11 +159,8 @@ exports.run = async (context, noUpload = false) => {
   }
 }
 
-/**
- * @type {import('@data-fair/lib-common-types/processings.js').PrepareFunction}
- */
-exports.prepare = async ({ processingConfig, secrets }) => {
-  const auth = processingConfig.auth
+export const prepare: PrepareFunction<ProcessingConfig> = async ({ processingConfig, secrets }) => {
+  const auth = (processingConfig as any).auth as Auth | undefined
   if (!auth) return { processingConfig, secrets }
 
   for (const key of ['password', 'apiKeyValue', 'clientSecret']) {

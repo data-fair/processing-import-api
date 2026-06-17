@@ -2,14 +2,19 @@
   "name": "@data-fair/processing-import-api",
   "version": "0.3.5",
   "description": "Create a data-fair dataset from an API",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
+  "main": "index.ts",
+  "type": "module",
   "scripts": {
-    "test": "mkdir -p data && mocha --exit -timeout 120000",
     "lint": "eslint .",
-    "prepare": "husky || true"
+    "lint-fix": "eslint --fix .",
+    "prepare": "husky || true",
+    "build-types": "export NODE_OPTIONS='--experimental-strip-types' && df-build-types ./",
+    "test-base": "NODE_ENV=test node --experimental-strip-types --test-force-exit --test-concurrency=1 --test --test-reporter=spec --test-reporter-destination=stdout",
+    "test": "npm run test-base test-it/*.ts"
+  },
+  "imports": {
+    "#config": "./lib/config.ts",
+    "#types/*": "./types/*"
   },
   "repository": {
     "type": "git",
@@ -18,45 +23,36 @@
   "keywords": [
     "data-fair-processings-plugin"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Koumoul <contact@koumoul.com>",
+  "license": "AGPL-3.0-only",
   "bugs": {
     "url": "https://github.com/data-fair/processing-import-api/issues"
   },
   "homepage": "https://github.com/data-fair/processing-import-api#readme",
   "devDependencies": {
-    "@bcherny/json-schema-ref-parser": "^10.0.5-fork",
-    "@commitlint/config-conventional": "^19.1.0",
-    "@data-fair/lib-common-types": "^1.10.1",
-    "@data-fair/lib-processing-dev": "^0.2.0",
-    "@types/config": "^3.3.3",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.30",
-    "ajv-formats": "^2.1.1",
-    "ajv-i18n": "^4.2.0",
-    "axios": "^1.6.7",
-    "chroma-js": "^2.4.2",
-    "commitlint": "^19.2.1",
-    "config": "^3.3.9",
-    "dayjs": "^1.11.10",
-    "draftlog": "^1.0.13",
-    "eslint": "^8.57.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-config-standard-with-typescript": "^43.0.1",
-    "eslint-plugin-no-only-tests": "^3.1.0",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@data-fair/lib-common-types": "^1.20.6",
+    "@data-fair/lib-processing-dev": "^0.3.0",
+    "@data-fair/lib-types-builder": "^1.7.0",
+    "@data-fair/lib-utils": "^1.10.2",
+    "@types/node": "^25.5.0",
+    "config": "^4.4.1",
+    "eslint": "^9.26.0",
     "husky": "^9.1.7",
-    "json-schema-to-typescript": "^11.0.5",
-    "mocha": "^10.2.0",
-    "ncp": "^2.0.0",
-    "nock": "^13.5.4",
-    "standard": "^17.0.0",
-    "typescript": "^5.4.3",
-    "ws": "^8.16.0"
+    "neostandard": "^0.12.1",
+    "nock": "^14.0.12",
+    "typescript": "^5.8.3",
+    "ws": "^8.19.0"
   },
   "dependencies": {
-    "csv-stringify": "^6.5.0",
-    "date-fns": "^3.3.1",
-    "form-data": "^4.0.0",
+    "axios": "^1.6.7",
+    "csv-stringify": "^6.6.0",
+    "form-data": "^4.0.5",
     "slugify": "^1.6.6"
-  }
+  },
+  "files": [
+    "processing-config-schema.json",
+    "./lib/**/*"
+  ]
 }

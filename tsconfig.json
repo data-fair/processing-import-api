@@ -3,6 +3,7 @@
     "target": "esnext",
     "module": "nodenext",
     "moduleResolution": "NodeNext",
+    "allowImportingTsExtensions": true,
     "noEmit": true,
     "strict": true,
     "allowJs": true,
@@ -10,5 +11,5 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "types", "ui", "dev"]
+  "exclude": ["node_modules",".type"]
 }
