@@ -56,6 +56,12 @@
                   "title": "Titre"
                 }
               }
+            },
+            "drop": {
+              "type": "boolean",
+              "default": false,
+              "title": "Remplacer les données",
+              "description": "Supprime les lignes existantes qui ne sont plus renvoyées par l'API, plutôt que de les conserver. Le remplacement est atomique : en cas d'erreur, les données précédentes sont conservées. Sans effet sur un jeu de données fichier, dont le fichier remplace toujours l'intégralité des données."
             }
           }
         }

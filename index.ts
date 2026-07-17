@@ -4,6 +4,7 @@ import type { Auth, Block, PaginationConfig } from './lib/types.ts'
 import util from 'node:util'
 import fs from 'node:fs'
 import path from 'node:path'
+import { finished } from 'node:stream/promises'
 import FormData from 'form-data'
 import slugify from 'slugify'
 import { stringify } from 'csv-stringify/sync'
@@ -11,6 +12,32 @@ import getAuthHeaders from './lib/authentications.ts'
 import { getValueByPath } from './lib/utils.ts'
 
 type ImportApiContext = ProcessingContext<ProcessingConfig>
+
+/**
+ * Data Fair reports why it rejected a call in the response body. Both axios instances used
+ * by a processing reject with a response-like object rather than an AxiosError, and they
+ * don't agree on its shape: the runtime one carries a formatted `message`, the test harness
+ * only the raw body. Read the body first, it is the actionable part.
+ */
+export const errorMessage = (err: any): string => {
+  const data = err?.response?.data ?? err?.data
+  if (typeof data === 'string' && data) return data
+  if (typeof data?.message === 'string') return data.message
+  if (data) return JSON.stringify(data)
+  if (typeof err?.message === 'string') return err.message
+  const status = err?.response?.status ?? err?.status
+  return status ? `HTTP ${status}` : String(err)
+}
+
+const errorStatus = (err: any): number | undefined => err?.response?.status ?? err?.status
+
+/**
+ * Write to a stream while honouring backpressure, so that large exports don't pile up in memory.
+ */
+const writeChunk = (stream: fs.WriteStream, chunk: string): Promise<void> => {
+  if (stream.write(chunk)) return Promise.resolve()
+  return new Promise((resolve) => stream.once('drain', resolve))
+}
 
 const getPageUrl = async (context: ImportApiContext, offset: number, data?: any, lines?: any[]): Promise<string | null> => {
   const url = (context.processingConfig as any).apiURL as string
@@ -72,8 +99,124 @@ export const blockHeaders = (block?: Block): string[] => {
   } else return base
 }
 
+/**
+ * Read the target dataset to route the upload. An editable dataset only accepts lines through
+ * _bulk_lines: Data Fair rejects a file posted on it with "this dataset is not file based".
+ */
+const getTargetDataset = async (context: ImportApiContext, datasetId: string) => {
+  try {
+    return (await context.axios.get(`api/v1/datasets/${datasetId}`)).data
+  } catch (err: any) {
+    if (errorStatus(err) === 404) {
+      throw new Error(`Le jeu de données id="${datasetId}" n'existe pas, il a peut-être été supprimé.`)
+    }
+    throw new Error(`Impossible de lire le jeu de données id="${datasetId}" : ${errorMessage(err)}`)
+  }
+}
+
+const uploadToFileDataset = async (context: ImportApiContext, filePath: string, filename: string) => {
+  const { processingConfig, processingId, axios, log, patchConfig } = context
+  const cfg = processingConfig as any
+
+  const formData: any = new FormData()
+  formData.append('title', cfg.dataset.title)
+  formData.append('extras', JSON.stringify({ processingId }))
+  formData.append('file', fs.createReadStream(filePath), { filename })
+  formData.getLength = util.promisify(formData.getLength)
+
+  let dataset
+  try {
+    dataset = (await axios({
+      method: 'post',
+      url: 'api/v1/datasets/' + (cfg.dataset.id || ''),
+      data: formData,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
+    })).data
+  } catch (err) {
+    throw new Error(`Le chargement du fichier a échoué : ${errorMessage(err)}`)
+  }
+
+  await log.info(`jeu de donnée ${cfg.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
+  if (cfg.datasetMode === 'create') {
+    await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title } })
+  }
+  await log.info('Toutes les données ont été envoyées')
+}
+
+/**
+ * An editable dataset takes the very CSV we already produced, as a multipart "actions" part.
+ * _bulk_lines never derives the schema from the data, so columns the dataset doesn't declare
+ * would make Data Fair reject the whole stream: check them first to fail with a message that
+ * says what to fix.
+ */
+const uploadToEditableDataset = async (
+  context: ImportApiContext,
+  dataset: any,
+  filePath: string,
+  filename: string,
+  totalLines: number,
+  columns: string[]
+) => {
+  const { processingConfig, axios, log } = context
+  const drop = (processingConfig as any).drop === true
+
+  const declared = new Set<string>()
+  for (const prop of dataset.schema ?? []) {
+    if (prop['x-calculated'] || prop['x-extension']) continue
+    declared.add(prop.key)
+    if (prop['x-originalName']) declared.add(prop['x-originalName'])
+  }
+  const unknown = columns.filter(c => !declared.has(c))
+  if (unknown.length) {
+    throw new Error(`Colonnes absentes du schéma du jeu de données éditable : ${unknown.join(', ')}. Ajoutez-les au schéma du jeu de données, ou corrigez les clés du mapping.`)
+  }
+
+  if (drop && totalLines === 0) {
+    throw new Error('Aucune ligne n\'a été récupérée depuis l\'API : import annulé pour ne pas vider le jeu de données.')
+  }
+  if (!drop && !dataset.primaryKey?.length) {
+    await log.warning('Le jeu de données n\'a pas de clé primaire : chaque exécution ajoutera de nouvelles lignes au lieu de mettre à jour les existantes. Définissez une clé primaire sur le jeu de données, ou activez le remplacement des données.')
+  }
+
+  const formData: any = new FormData()
+  formData.append('actions', fs.createReadStream(filePath), { filename })
+  formData.getLength = util.promisify(formData.getLength)
+
+  let summary: any
+  try {
+    summary = (await axios({
+      method: 'post',
+      url: `api/v1/datasets/${dataset.id}/_bulk_lines?drop=${drop}`,
+      data: formData,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
+    })).data
+  } catch (err) {
+    throw new Error(`Le chargement des lignes a échoué : ${errorMessage(err)}`)
+  }
+
+  // _bulk_lines decides its status code when it flushes the first batch, so a later failure
+  // still answers 200. The summary is the only reliable signal.
+  for (const error of (summary.errors ?? []).slice(0, 10)) {
+    await log.error(`ligne ${error.line} : ${error.error}`)
+  }
+  if (summary.cancelled) {
+    throw new Error(`Le remplacement des données a été annulé par Data Fair (${summary.nbErrors} lignes en erreur), les données précédentes sont conservées.`)
+  }
+  if (summary.nbErrors) {
+    throw new Error(`${summary.nbErrors} lignes en erreur sur ${summary.nbOk + summary.nbErrors} envoyées.`)
+  }
+
+  await log.info(`jeu de donnée éditable mis à jour, id="${dataset.id}", title="${dataset.title}"`)
+  await log.info(`${summary.nbCreated ?? 0} lignes créées, ${summary.nbModified ?? 0} modifiées, ${summary.nbDeleted ?? 0} supprimées, ${summary.nbNotModified ?? 0} inchangées`)
+  await log.info('Toutes les données ont été envoyées')
+}
+
 export const run = async (context: ImportApiContext, noUpload = false) => {
-  const { processingConfig, processingId, tmpDir, axios, log, patchConfig } = context
+  const { processingConfig, tmpDir, axios, log } = context
   const cfg = processingConfig as any
 
   // ------------------ Récupération, conversion et envoi des données ------------------
@@ -98,6 +241,7 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
   const writeStream = fs.createWriteStream(path.join(tmpDir, filename), { flags: 'w' })
   const columns = blockHeaders(cfg.block)
   let header = true
+  let totalLines = 0
   while (nextPageURL) {
     await log.info(`Récupération de ${nextPageURL}`)
     const results = await axios({
@@ -126,36 +270,27 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
     nextPageURL = await getPageUrl(context, offset, results.data, (Array.isArray(data) ? data : [data]))
 
     await log.info(`Création de ${lines.length} lignes`)
-    await writeStream.write(stringify(lines, { header, columns, quoted: true }))
+    await writeChunk(writeStream, stringify(lines, { header, columns, quoted: true }))
     header = false
+    totalLines += lines.length
   }
+  // the file has to be fully flushed before it is read back for the upload
+  writeStream.end()
+  await finished(writeStream)
+
   if (!noUpload) {
     await log.step('Chargement des données')
-    const formData: any = new FormData()
-    formData.append('title', cfg.dataset.title)
-    formData.append('extras', JSON.stringify({ processingId }))
-    formData.append('file', fs.createReadStream(path.join(tmpDir, filename)), { filename })
-    formData.getLength = util.promisify(formData.getLength)
+    const filePath = path.join(tmpDir, filename)
+    const targetDataset = cfg.dataset.id ? await getTargetDataset(context, cfg.dataset.id) : null
 
-    try {
-      const dataset = (await axios({
-        method: 'post',
-        url: 'api/v1/datasets/' + (cfg.dataset.id || ''),
-        data: formData,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity,
-        headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
-      })).data
-      await log.info(`jeu de donnée ${cfg.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
-      if (cfg.datasetMode === 'create') {
-        await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title } })
-      }
-    } catch (err) {
-      console.log(JSON.stringify(err, null, 2))
+    if (targetDataset?.isRest) {
+      await uploadToEditableDataset(context, targetDataset, filePath, filename, totalLines, columns)
+    } else {
+      await uploadToFileDataset(context, filePath, filename)
     }
-    await log.info('Toutes les données ont été envoyées')
+
     await log.info('Suppression du fichier CSV temporaire')
-    fs.unlinkSync(path.join(tmpDir, filename))
+    fs.unlinkSync(filePath)
   }
 }
 

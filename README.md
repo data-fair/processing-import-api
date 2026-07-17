@@ -7,6 +7,29 @@ Processing plugin for the [Data Fair](https://github.com/data-fair/processings) 
 - **Flexible authentication** — Supports public APIs as well as Basic Auth, Bearer Token, API key, OAuth 2.0 (client / password credentials) and GLPI-style session tokens. Secrets are stored separately from the configuration.
 - **Pagination** — Handles no pagination, query-parameter pagination (`offset`/`limit`) and "next page" links extracted from the response body.
 - **Field mapping** — A recursive block configuration maps nested JSON properties to flat CSV columns, including the expansion of nested arrays into multiple rows.
+- **File and editable datasets** — The target dataset type is detected automatically on update: a file dataset gets the CSV as a file upload, an editable (REST) dataset gets it through `_bulk_lines`.
+
+## Updating an editable dataset
+
+The type of the target dataset is read from Data Fair at each run, so there is nothing to
+configure: pick the dataset, and the plugin picks the right API. Two things are worth knowing
+about editable datasets.
+
+**Columns must already exist in the schema.** `_bulk_lines` never derives the schema from the
+data it receives, so every key of the mapping has to match a column of the target dataset. The
+plugin checks this before uploading and names the missing columns rather than letting Data Fair
+reject the whole import.
+
+**Lines are matched on the dataset's primary key.** Without one, Data Fair gives each incoming
+line a random id, so every run appends a full copy of the data instead of updating it. Define a
+primary key on the dataset — the plugin warns when it is missing.
+
+| Field | Description |
+| ----- | ----------- |
+| `drop` | Replace the data instead of adding to it: lines no longer returned by the API are removed. The replacement is atomic — on error the previous data is kept. An import that retrieved no line at all is refused, so a broken API cannot empty the dataset. No effect on a file dataset, where the new file always replaces everything. |
+
+Creating an editable dataset is not supported yet: create it in Data Fair, then point the
+processing at it.
 
 ## Configuration
 
