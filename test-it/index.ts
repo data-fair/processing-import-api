@@ -160,6 +160,25 @@ describe('import-api processing', () => {
     )
   })
 
+  it('should leave an editable dataset untouched when the API returns nothing and drop is off', async function () {
+    nock('https://api.insee.fr')
+      .get('/entreprises/sirene/V3.11/siret')
+      .reply(200, { etablissements: [] })
+    const dfScope = nock(dfOrigin)
+      .get(`${dfPath}/api/v1/datasets/sirene-ds`)
+      .reply(200, restDataset())
+      .post(`${dfPath}/api/v1/datasets/sirene-ds/_bulk_lines`)
+      .query(true)
+      .reply(200, { nbOk: 0, nbErrors: 0 })
+
+    await importApiPlugin.run(sireneContext(sireneConfig()))
+
+    assert.ok(
+      dfScope.pendingMocks().some(m => m.includes('_bulk_lines')),
+      'un import vide ne doit pas appeler _bulk_lines'
+    )
+  })
+
   it('should fail when _bulk_lines reports errors, even on a 200 response', async function () {
     nockSireneApi()
     nock(dfOrigin)

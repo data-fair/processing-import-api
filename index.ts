@@ -173,8 +173,10 @@ const uploadToEditableDataset = async (
     throw new Error(`Colonnes absentes du schéma du jeu de données éditable : ${unknown.join(', ')}. Ajoutez-les au schéma du jeu de données, ou corrigez les clés du mapping.`)
   }
 
-  if (drop && totalLines === 0) {
-    throw new Error('Aucune ligne n\'a été récupérée depuis l\'API : import annulé pour ne pas vider le jeu de données.')
+  if (totalLines === 0) {
+    if (drop) throw new Error('Aucune ligne n\'a été récupérée depuis l\'API : import annulé pour ne pas vider le jeu de données.')
+    await log.warning('Aucune ligne n\'a été récupérée depuis l\'API : le jeu de données est laissé inchangé.')
+    return
   }
   if (!drop && !dataset.primaryKey?.length) {
     await log.warning('Le jeu de données n\'a pas de clé primaire : chaque exécution ajoutera de nouvelles lignes au lieu de mettre à jour les existantes. Définissez une clé primaire sur le jeu de données, ou activez le remplacement des données.')
@@ -207,7 +209,7 @@ const uploadToEditableDataset = async (
     throw new Error(`Le remplacement des données a été annulé par Data Fair (${summary.nbErrors} lignes en erreur), les données précédentes sont conservées.`)
   }
   if (summary.nbErrors) {
-    throw new Error(`${summary.nbErrors} lignes en erreur sur ${summary.nbOk + summary.nbErrors} envoyées.`)
+    throw new Error(`${summary.nbErrors} lignes en erreur sur ${(summary.nbOk ?? 0) + summary.nbErrors} envoyées.`)
   }
 
   await log.info(`jeu de donnée éditable mis à jour, id="${dataset.id}", title="${dataset.title}"`)
