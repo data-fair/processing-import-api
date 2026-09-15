@@ -130,6 +130,40 @@ describe('import-api processing', () => {
     assert.ok(scope.isDone())
   })
 
+  it('should report the pagination as a single progress task instead of one log per page', async function () {
+    const page = (start: number) => ({ etablissements: sirene.etablissements.slice(start, start + 2) })
+    const apiScope = nock('https://api.insee.fr')
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '0' }).reply(200, page(0))
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '2' }).reply(200, page(2))
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '4' }).reply(200, page(4))
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '6' }).reply(200, { etablissements: [] })
+
+    const context = sireneContext(sireneConfig({
+      pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
+    }))
+    const entries: Array<{ type: string, msg: string, progress?: number }> = []
+    for (const type of ['step', 'info', 'warning', 'error', 'debug', 'task'] as const) {
+      const original = context.log[type]
+      context.log[type] = async (msg: string, extra?: any) => { entries.push({ type, msg }); await original(msg, extra) }
+    }
+    const originalProgress = context.log.progress
+    context.log.progress = async (msg, progress, total) => { entries.push({ type: 'progress', msg, progress }); await originalProgress(msg, progress, total) }
+
+    await importApiPlugin.run(context, true)
+    assert.ok(apiScope.isDone())
+
+    // the API is named once, and the pages go through the progress of a single task
+    const infos = entries.filter(e => e.type === 'info')
+    assert.deepStrictEqual(infos.filter(e => e.msg.startsWith('Récupération de')).map(e => e.msg), ['Récupération de https://api.insee.fr/entreprises/sirene/V3.11/siret'])
+    assert.strictEqual(entries.filter(e => e.type === 'task').length, 1)
+    const taskName = entries.find(e => e.type === 'task')!.msg
+    assert.deepStrictEqual(entries.filter(e => e.type === 'progress').map(e => [e.msg, e.progress]), [[taskName, 2], [taskName, 4], [taskName, 6]])
+    // nothing else is written per page, only the final summary
+    assert.strictEqual(infos.length, 2)
+    assert.match(infos[1].msg, /^3 pages récupérées, 6 lignes converties$/)
+    assert.strictEqual(entries.filter(e => e.type === 'warning').length, 0)
+  })
+
   it('should send lines to an editable dataset through _bulk_lines, never as a file', async function () {
     const apiScope = nockSireneApi()
     const dfScope = nock(dfOrigin)

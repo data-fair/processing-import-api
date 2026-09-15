@@ -244,8 +244,17 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
   const columns = blockHeaders(cfg.block)
   let header = true
   let totalLines = 0
+  let pages = 0
+  let warnedLargePage = false
+  // The run log is stored whole in the run document, so a paginated import must not write
+  // one entry per page: thousands of pages with a long URL each would overflow it. The API is
+  // named once, the pages update a single progress entry, and the URLs only go to debug.
+  await log.info(`Récupération de ${cfg.apiURL}`)
+  const paginated = !!cfg.pagination && cfg.pagination.method !== 'none'
+  const pagesTask = 'Récupération des données'
+  if (paginated) await log.task(pagesTask)
   while (nextPageURL) {
-    await log.info(`Récupération de ${nextPageURL}`)
+    await log.debug(`Récupération de ${nextPageURL}`)
     const results = await axios({
       method: 'get',
       url: nextPageURL,
@@ -253,29 +262,27 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
       timeout: 10 * 60000 // very long timeout as we don't control the API and some export logic are very slow
     })
     const data = getValueByPath(results.data, cfg.resultsPath)
-    if (!data) {
-      await log.warning('Aucune donnée n\'a été récupérée')
-      break
-    }
-    await log.info(`Conversion de ${data.length || 1} lignes`)
+    if (!data) break
     const lines = ([] as Array<Record<string, any>>).concat(...(Array.isArray(data) ? data : [data]).map((d: any) => flattenData(d, cfg.block, cfg.separator)))
 
-    if (lines.length === 0) {
-      await log.warning('Aucune donnée n\'a été récupérée')
-      break
-    } else if (data.length > 10000) {
+    if (lines.length === 0) break
+    if (data.length > 10000 && !warnedLargePage) {
       await log.warning('Le nombre de lignes est trop important, privilégier une pagination plus petite.')
+      warnedLargePage = true
     }
 
     if (cfg.pagination?.offsetPages) offset++
     else offset += data.length
     nextPageURL = await getPageUrl(context, offset, results.data, (Array.isArray(data) ? data : [data]))
 
-    await log.info(`Création de ${lines.length} lignes`)
     await writeChunk(writeStream, stringify(lines, { header, columns, quoted: true }))
     header = false
     totalLines += lines.length
+    pages++
+    if (paginated) await log.progress(pagesTask, totalLines, 0)
   }
+  if (totalLines === 0) await log.warning('Aucune donnée n\'a été récupérée')
+  else await log.info(`${pages} page${pages > 1 ? 's' : ''} récupérée${pages > 1 ? 's' : ''}, ${totalLines} ligne${totalLines > 1 ? 's' : ''} convertie${totalLines > 1 ? 's' : ''}`)
   // the file has to be fully flushed before it is read back for the upload
   writeStream.end()
   await finished(writeStream)
