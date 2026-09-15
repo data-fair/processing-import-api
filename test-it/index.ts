@@ -53,6 +53,20 @@ const restDataset = (overrides: any = {}) => ({
   ...overrides
 })
 
+/**
+ * Spy on every log function of a context, keeping the original behaviour.
+ */
+const recordLog = (context: any) => {
+  const entries: Array<{ type: string, msg: string, progress?: number, total?: number }> = []
+  for (const type of ['step', 'info', 'warning', 'error', 'debug', 'task'] as const) {
+    const original = context.log[type]
+    context.log[type] = async (msg: string, extra?: any) => { entries.push({ type, msg }); await original(msg, extra) }
+  }
+  const originalProgress = context.log.progress
+  context.log.progress = async (msg: string, progress: number, total: number) => { entries.push({ type: 'progress', msg, progress, total }); await originalProgress(msg, progress, total) }
+  return entries
+}
+
 describe('import-api processing', () => {
   before(() => {
     fs.mkdirSync('data', { recursive: true })
@@ -141,13 +155,7 @@ describe('import-api processing', () => {
     const context = sireneContext(sireneConfig({
       pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
     }))
-    const entries: Array<{ type: string, msg: string, progress?: number }> = []
-    for (const type of ['step', 'info', 'warning', 'error', 'debug', 'task'] as const) {
-      const original = context.log[type]
-      context.log[type] = async (msg: string, extra?: any) => { entries.push({ type, msg }); await original(msg, extra) }
-    }
-    const originalProgress = context.log.progress
-    context.log.progress = async (msg, progress, total) => { entries.push({ type: 'progress', msg, progress }); await originalProgress(msg, progress, total) }
+    const entries = recordLog(context)
 
     await importApiPlugin.run(context, true)
     assert.ok(apiScope.isDone())
@@ -157,11 +165,38 @@ describe('import-api processing', () => {
     assert.deepStrictEqual(infos.filter(e => e.msg.startsWith('Récupération de')).map(e => e.msg), ['Récupération de https://api.insee.fr/entreprises/sirene/V3.11/siret'])
     assert.strictEqual(entries.filter(e => e.type === 'task').length, 1)
     const taskName = entries.find(e => e.type === 'task')!.msg
-    assert.deepStrictEqual(entries.filter(e => e.type === 'progress').map(e => [e.msg, e.progress]), [[taskName, 2], [taskName, 4], [taskName, 6]])
+    assert.deepStrictEqual(entries.filter(e => e.type === 'progress').map(e => [e.msg, e.progress, e.total]), [[taskName, 2, 0], [taskName, 4, 0], [taskName, 6, 0], [taskName, 6, 6]])
     // nothing else is written per page, only the final summary
     assert.strictEqual(infos.length, 2)
     assert.match(infos[1].msg, /^3 pages récupérées, 6 lignes converties$/)
     assert.strictEqual(entries.filter(e => e.type === 'warning').length, 0)
+  })
+
+  it('should fail when the API keeps returning the same page (pagination parameter ignored)', async function () {
+    const page = { etablissements: sirene.etablissements.slice(0, 2) }
+    const apiScope = nock('https://api.insee.fr')
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '0' }).reply(200, page)
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '2' }).reply(200, page)
+
+    const context = sireneContext(sireneConfig({
+      pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
+    }))
+    await assert.rejects(importApiPlugin.run(context, true), /même page/)
+    assert.ok(apiScope.isDone())
+  })
+
+  it('should warn when the results path does not point to an array while paginating', async function () {
+    const apiScope = nock('https://api.insee.fr')
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '0' }).reply(200, { etablissements: sirene.etablissements.slice(0, 2) })
+
+    const context = sireneContext(sireneConfig({
+      resultsPath: '',
+      pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
+    }))
+    const entries = recordLog(context)
+    await importApiPlugin.run(context, true)
+    assert.ok(apiScope.isDone())
+    assert.ok(entries.some(e => e.type === 'warning' && /Chemin des résultats/.test(e.msg)), 'expected a warning about the results path')
   })
 
   it('should send lines to an editable dataset through _bulk_lines, never as a file', async function () {

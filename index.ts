@@ -2,6 +2,7 @@ import type { ProcessingContext, PrepareFunction } from '@data-fair/lib-common-t
 import type { ProcessingConfig } from './types/processingConfig/index.ts'
 import type { Auth, Block, PaginationConfig } from './lib/types.ts'
 import util from 'node:util'
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { finished } from 'node:stream/promises'
@@ -246,6 +247,7 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
   let totalLines = 0
   let pages = 0
   let warnedLargePage = false
+  let previousPage: string | undefined
   // The run log is stored whole in the run document, so a paginated import must not write
   // one entry per page: thousands of pages with a long URL each would overflow it. The API is
   // named once, the pages update a single progress entry, and the URLs only go to debug.
@@ -263,6 +265,17 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
     })
     const data = getValueByPath(results.data, cfg.resultsPath)
     if (!data) break
+    if (paginated) {
+      // An API that ignores the pagination parameter answers the same page forever
+      const page = createHash('sha1').update(JSON.stringify(data)).digest('hex')
+      if (page === previousPage) {
+        throw new Error(`L'API a renvoyé deux fois la même page (${nextPageURL}) : la pagination est probablement mal configurée, vérifiez que l'API prend bien en compte le paramètre d'offset ou de page suivante.`)
+      }
+      previousPage = page
+      if (!Array.isArray(data) && pages === 0) {
+        await log.warning(`Le « Chemin des résultats » (${cfg.resultsPath ? `« ${cfg.resultsPath} »` : 'vide'}) ne désigne pas un tableau : la réponse est traitée comme une ligne unique et la pagination s'arrête.`)
+      }
+    }
     const lines = ([] as Array<Record<string, any>>).concat(...(Array.isArray(data) ? data : [data]).map((d: any) => flattenData(d, cfg.block, cfg.separator)))
 
     if (lines.length === 0) break
@@ -281,6 +294,8 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
     pages++
     if (paginated) await log.progress(pagesTask, totalLines, 0)
   }
+  // close the progress entry, the UI keeps an indeterminate bar while total is unknown
+  if (paginated && totalLines > 0) await log.progress(pagesTask, totalLines, totalLines)
   if (totalLines === 0) await log.warning('Aucune donnée n\'a été récupérée')
   else await log.info(`${pages} page${pages > 1 ? 's' : ''} récupérée${pages > 1 ? 's' : ''}, ${totalLines} ligne${totalLines > 1 ? 's' : ''} convertie${totalLines > 1 ? 's' : ''}`)
   // the file has to be fully flushed before it is read back for the upload
