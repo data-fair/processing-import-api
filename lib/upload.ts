@@ -37,12 +37,45 @@ export const getTargetDataset = async (context: ProcessingContext<ProcessingConf
   }
 }
 
+/**
+ * Title of the dataset to create. Processings saved before the flat `datasetTitle` field
+ * carried it in `dataset.title`.
+ */
+export const datasetTitle = (cfg: any): string => cfg.datasetTitle || cfg.dataset?.title
+
+/**
+ * Create an empty editable dataset carrying the columns of the mapping. Data Fair validates
+ * every line of an editable dataset strictly against its schema and never infers it, so the
+ * columns have to be declared here; they are all created as strings, the types and the primary
+ * key are adjusted afterwards in the dataset schema.
+ */
+export const createEditableDataset = async (context: ProcessingContext<ProcessingConfig>, columns: string[]) => {
+  const { processingConfig, processingId, axios, log, patchConfig } = context
+  const cfg = processingConfig as any
+
+  let dataset
+  try {
+    dataset = (await axios.post('api/v1/datasets', {
+      title: datasetTitle(cfg),
+      isRest: true,
+      schema: columns.map(key => ({ key, type: 'string' })),
+      extras: { processingId }
+    })).data
+  } catch (err) {
+    throw new Error(`La création du jeu de données éditable a échoué : ${errorMessage(err)}`)
+  }
+
+  await log.info(`jeu de donnée éditable créé, id="${dataset.id}", title="${dataset.title}"`)
+  await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title, isRest: true } })
+  return dataset
+}
+
 export const uploadToFileDataset = async (context: ProcessingContext<ProcessingConfig>, filePath: string, filename: string) => {
   const { processingConfig, processingId, axios, log, patchConfig } = context
   const cfg = processingConfig as any
 
   const formData: any = new FormData()
-  formData.append('title', cfg.dataset.title)
+  formData.append('title', datasetTitle(cfg))
   formData.append('extras', JSON.stringify({ processingId }))
   formData.append('file', fs.createReadStream(filePath), { filename })
   formData.getLength = util.promisify(formData.getLength)
@@ -51,7 +84,7 @@ export const uploadToFileDataset = async (context: ProcessingContext<ProcessingC
   try {
     dataset = (await axios({
       method: 'post',
-      url: 'api/v1/datasets/' + (cfg.dataset.id || ''),
+      url: 'api/v1/datasets/' + (cfg.dataset?.id || ''),
       data: formData,
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
@@ -63,7 +96,7 @@ export const uploadToFileDataset = async (context: ProcessingContext<ProcessingC
 
   await log.info(`jeu de donnée ${cfg.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
   if (cfg.datasetMode === 'create') {
-    await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title } })
+    await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title, isRest: false } })
   }
   await log.info('Toutes les données ont été envoyées')
 }

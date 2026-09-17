@@ -5,46 +5,51 @@
   "allOf": [
     {
       "title": "Jeu de données",
+      "default": {
+        "datasetMode": "update"
+      },
       "oneOf": [
         {
           "title": "Créer un jeu de données",
-          "required": ["dataset"],
+          "required": ["datasetMode", "datasetTitle"],
           "properties": {
             "datasetMode": {
               "type": "string",
               "const": "create",
               "title": "Action"
             },
-            "dataset": {
-              "type": "object",
-              "required": ["title"],
-              "properties": {
-                "title": {
-                  "type": "string",
-                  "title": "Titre",
-                  "description": "Le jeu de données est créé à la première exécution, puis mis à jour par les suivantes."
-                }
-              }
+            "datasetTitle": {
+              "type": "string",
+              "title": "Titre du jeu de données à créer",
+              "description": "Le jeu de données est créé à la première exécution. Ce traitement bascule ensuite automatiquement en mode « Mettre à jour un jeu de données » sur le jeu créé : les exécutions suivantes le mettent à jour au lieu d'en créer un nouveau."
+            },
+            "editableCreate": {
+              "type": "boolean",
+              "default": false,
+              "title": "Jeu de données éditable",
+              "description": "Décoché, un jeu de données **fichier** est créé : data-fair déduit les types des colonnes du CSV, et chaque exécution remplace le fichier entier.\n\nCoché, un jeu de données **éditable** est créé avec les colonnes du mapping, toutes de type texte : ajustez les types et définissez une clé primaire dans le schéma du jeu de données après la création. Les exécutions suivantes ajoutent ou modifient les lignes selon cette clé, ou remplacent les données si l'option est cochée."
             }
           }
         },
         {
           "title": "Mettre à jour un jeu de données",
-          "required": ["dataset"],
+          "required": ["datasetMode", "dataset"],
           "properties": {
             "datasetMode": {
               "type": "string",
-              "const": "update"
+              "const": "update",
+              "title": "Action"
             },
             "dataset": {
               "type": "object",
-              "title": "Jeu de données existant",
+              "title": "Jeu de données",
               "description": "Jeu de données fichier ou éditable. Pour un jeu éditable, les colonnes du mapping doivent déjà exister dans son schéma et une clé primaire doit être définie.",
               "layout": {
                 "getItems": {
-                  "url": "${context.dataFairUrl}/api/v1/datasets?q={q}&select=id,title&size=50&${context.ownerFilter}",
+                  "url": "${context.dataFairUrl}/api/v1/datasets?select=id,title,isRest&size=50&${context.ownerFilter}&raw=true",
+                  "qSearchParam": "q",
                   "itemsResults": "data.results",
-                  "itemTitle": "item.title",
+                  "itemTitle": "item.title + (item.isRest ? ' (éditable)' : '')",
                   "itemKey": "item.id"
                 }
               },
@@ -56,6 +61,10 @@
                 "title": {
                   "type": "string",
                   "title": "Titre"
+                },
+                "isRest": {
+                  "type": "boolean",
+                  "layout": "none"
                 }
               }
             },
@@ -63,7 +72,10 @@
               "type": "boolean",
               "default": false,
               "title": "Remplacer les données",
-              "description": "Supprime les lignes existantes qui ne sont plus renvoyées par l'API, plutôt que de les conserver. Le remplacement est atomique : en cas d'erreur, les données précédentes sont conservées. Sans effet sur un jeu de données fichier, dont le fichier remplace toujours l'intégralité des données."
+              "description": "Supprime les lignes existantes qui ne sont plus renvoyées par l'API, plutôt que de les conserver. Le remplacement est atomique : en cas d'erreur, les données précédentes sont conservées.",
+              "layout": {
+                "if": "parent.data.dataset?.isRest"
+              }
             }
           }
         }

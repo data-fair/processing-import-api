@@ -10,7 +10,7 @@ import getAuthHeaders from './authentications.ts'
 import { secretKeys } from './prepare.ts'
 import { getPageUrl } from './pagination.ts'
 import { flattenData, blockHeaders } from './flatten.ts'
-import { getTargetDataset, uploadToFileDataset, uploadToEditableDataset } from './upload.ts'
+import { getTargetDataset, createEditableDataset, uploadToFileDataset, uploadToEditableDataset, datasetTitle } from './upload.ts'
 import { getValueByPath } from './utils.ts'
 
 /**
@@ -55,7 +55,7 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
 
   let offset = cfg.pagination?.offsetPages ? 1 : 0
   let nextPageURL: string | null = await getPageUrl(context, offset)
-  const filename = slugify(cfg.dataset.title, { lower: true, strict: true }) + '.csv'
+  const filename = slugify(datasetTitle(cfg), { lower: true, strict: true }) + '.csv'
   const writeStream = fs.createWriteStream(path.join(tmpDir, filename), { flags: 'w' })
   const columns = blockHeaders(cfg.block)
   let header = true
@@ -128,7 +128,8 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
 
   if (!noUpload) {
     await log.step('Chargement des données')
-    const targetDataset = cfg.dataset.id ? await getTargetDataset(context, cfg.dataset.id) : null
+    let targetDataset = cfg.dataset?.id ? await getTargetDataset(context, cfg.dataset.id) : null
+    if (!targetDataset && cfg.editableCreate) targetDataset = await createEditableDataset(context, columns)
 
     if (targetDataset?.isRest) {
       await uploadToEditableDataset(context, targetDataset, filePath, filename, totalLines, columns)

@@ -344,6 +344,50 @@ describe('import-api processing', () => {
     assert.ok(apiScope.isDone())
   })
 
+  it('should create an editable dataset with a string schema, then fill it', async function () {
+    nockSireneApi()
+    let created: any
+    const dfScope = nock(dfOrigin)
+      .post(`${dfPath}/api/v1/datasets`, (body) => { created = body; return true })
+      // data-fair answers the created dataset with its (extended) schema
+      .reply(201, () => ({ id: 'sirene-new', title: 'Sirene', isRest: true, schema: [...created.schema, { key: '_id', type: 'string', 'x-calculated': true }] }))
+      .post(`${dfPath}/api/v1/datasets/sirene-new/_bulk_lines`)
+      .query({ drop: 'false' })
+      .reply(200, { nbOk: 20, nbErrors: 0, nbCreated: 20 })
+
+    const patches: any[] = []
+    const context = sireneContext(sireneConfig({
+      datasetMode: 'create',
+      dataset: undefined,
+      datasetTitle: 'Sirene',
+      editableCreate: true
+    }))
+    context.patchConfig = async (patch: any) => { patches.push(patch) }
+
+    await run(context)
+
+    assert.ok(dfScope.isDone())
+    assert.equal(created.isRest, true)
+    assert.equal(created.title, 'Sirene')
+    assert.equal(created.primaryKey, undefined)
+    assert.deepStrictEqual(created.schema, [{ key: 'siret', type: 'string' }, { key: 'denominationUniteLegale', type: 'string' }])
+    // the next run must update the dataset, and know it is editable
+    assert.deepStrictEqual(patches, [{ datasetMode: 'update', dataset: { id: 'sirene-new', title: 'Sirene', isRest: true } }])
+  })
+
+  it('should create a file dataset from the flat datasetTitle', async function () {
+    nockSireneApi()
+    const patches: any[] = []
+    const dfScope = nock(dfOrigin)
+      .post(`${dfPath}/api/v1/datasets/`)
+      .reply(201, { id: 'sirene-file', title: 'Sirene fichier' })
+    const context = sireneContext(sireneConfig({ datasetMode: 'create', dataset: undefined, datasetTitle: 'Sirene fichier' }))
+    context.patchConfig = async (patch: any) => { patches.push(patch) }
+    await run(context)
+    assert.ok(dfScope.isDone())
+    assert.deepStrictEqual(patches, [{ datasetMode: 'update', dataset: { id: 'sirene-file', title: 'Sirene fichier', isRest: false } }])
+  })
+
   it('should send lines to an editable dataset through _bulk_lines, never as a file', async function () {
     const apiScope = nockSireneApi()
     const dfScope = nock(dfOrigin)
