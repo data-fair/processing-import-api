@@ -7,6 +7,8 @@ import nock from 'nock'
 
 import testUtils from '@data-fair/lib-processing-dev/tests-utils.js'
 import * as importApiPlugin from '../index.ts'
+import { run, stop } from '../lib/execute.ts'
+import { flattenData, blockHeaders } from '../lib/flatten.ts'
 import { getValueByPath } from '../lib/utils.ts'
 import getAuthHeaders from '../lib/authentications.ts'
 
@@ -81,6 +83,12 @@ describe('import-api processing', () => {
     assert.equal(processingConfigSchema.type, 'object')
   })
 
+  it('should expose prepare, run and stop', async () => {
+    assert.equal(typeof importApiPlugin.prepare, 'function')
+    assert.equal(typeof importApiPlugin.run, 'function')
+    assert.equal(typeof importApiPlugin.stop, 'function')
+  })
+
   it('should get values by path', async () => {
     let data = getValueByPath(sites, 'sites.0.id')
     assert.equal(data, '2381912')
@@ -91,12 +99,12 @@ describe('import-api processing', () => {
   })
 
   it('should flatten a block', async () => {
-    const results = importApiPlugin.flattenData(cinemas, block as any, ';')
+    const results = flattenData(cinemas, block as any, ';')
     assert.ok(results.length > 0)
   })
 
   it('should get headers', async () => {
-    const headers = importApiPlugin.blockHeaders((processingConfig as any).block)
+    const headers = blockHeaders((processingConfig as any).block)
     assert.equal(headers.length, 10)
   })
 
@@ -181,7 +189,7 @@ describe('import-api processing', () => {
         secrets: { password: 'my-key' },
         tmpDir: 'data'
       }, config, false)
-      await importApiPlugin.run(context, true)
+      await run(context, true)
       assert.ok(login.isDone())
       assert.ok(data.isDone())
     })
@@ -214,7 +222,7 @@ describe('import-api processing', () => {
       processingConfig,
       tmpDir: 'data'
     }, config, false)
-    await importApiPlugin.run(context, true)
+    await run(context, true)
     assert.ok(scope.isDone())
   })
 
@@ -246,7 +254,7 @@ describe('import-api processing', () => {
       },
       tmpDir: 'data'
     }, config, false)
-    await importApiPlugin.run(context, true)
+    await run(context, true)
     assert.ok(scope.isDone())
   })
 
@@ -263,7 +271,7 @@ describe('import-api processing', () => {
     }))
     const entries = recordLog(context)
 
-    await importApiPlugin.run(context, true)
+    await run(context, true)
     assert.ok(apiScope.isDone())
 
     // the API is named once, and the pages go through the progress of a single task
@@ -287,7 +295,7 @@ describe('import-api processing', () => {
     const context = sireneContext(sireneConfig({
       pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
     }))
-    await assert.rejects(importApiPlugin.run(context, true), /même page/)
+    await assert.rejects(run(context, true), /même page/)
     assert.ok(apiScope.isDone())
   })
 
@@ -300,9 +308,40 @@ describe('import-api processing', () => {
       pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
     }))
     const entries = recordLog(context)
-    await importApiPlugin.run(context, true)
+    await run(context, true)
     assert.ok(apiScope.isDone())
     assert.ok(entries.some(e => e.type === 'warning' && /Chemin des résultats/.test(e.msg)), 'expected a warning about the results path')
+  })
+
+  it('should stop between two pages and never upload a truncated file', async function () {
+    const page = (i: number) => ({ etablissements: sirene.etablissements.slice(i, i + 2) })
+    const apiScope = nock('https://api.insee.fr')
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '0' })
+      // the interruption arrives while the first page is being read
+      .reply(200, async () => { await stop(); return page(0) })
+    const secondPage = nock('https://api.insee.fr')
+      .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '2' }).reply(200, page(2))
+    const dfScope = nock(dfOrigin)
+      .get(`${dfPath}/api/v1/datasets/sirene-ds`).reply(200, restDataset())
+      .post(`${dfPath}/api/v1/datasets/sirene-ds/_bulk_lines`).query(true).reply(200, { nbOk: 2, nbErrors: 0 })
+
+    const context = sireneContext(sireneConfig({
+      pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
+    }))
+    const entries = recordLog(context)
+    await run(context)
+
+    assert.ok(apiScope.isDone())
+    assert.ok(!secondPage.isDone(), 'the second page must not be fetched after a stop')
+    assert.ok(!dfScope.isDone(), 'a stopped run must not upload anything')
+    assert.ok(entries.some(e => e.type === 'warning' && /interrompu/i.test(e.msg)), 'expected a warning about the interruption')
+    assert.ok(!fs.existsSync('data/sirene.csv'), 'the temporary CSV must be removed')
+  })
+
+  it('should run again normally after a stopped run', async function () {
+    const apiScope = nockSireneApi()
+    await run(sireneContext(sireneConfig()), true)
+    assert.ok(apiScope.isDone())
   })
 
   it('should send lines to an editable dataset through _bulk_lines, never as a file', async function () {
@@ -314,7 +353,7 @@ describe('import-api processing', () => {
       .query({ drop: 'false' })
       .reply(200, { nbOk: 20, nbErrors: 0, nbCreated: 20, nbModified: 0, nbDeleted: 0, nbNotModified: 0 })
 
-    await importApiPlugin.run(sireneContext(sireneConfig()))
+    await run(sireneContext(sireneConfig()))
 
     assert.ok(apiScope.isDone())
     // a pending mock here would mean the file route was taken instead of _bulk_lines
@@ -330,7 +369,7 @@ describe('import-api processing', () => {
       .reply(200, restDataset())
 
     await assert.rejects(
-      importApiPlugin.run(sireneContext(sireneConfig({ drop: true }))),
+      run(sireneContext(sireneConfig({ drop: true }))),
       /import annulé pour ne pas vider le jeu de données/
     )
   })
@@ -346,7 +385,7 @@ describe('import-api processing', () => {
       .query(true)
       .reply(200, { nbOk: 0, nbErrors: 0 })
 
-    await importApiPlugin.run(sireneContext(sireneConfig()))
+    await run(sireneContext(sireneConfig()))
 
     assert.ok(
       dfScope.pendingMocks().some(m => m.includes('_bulk_lines')),
@@ -364,7 +403,7 @@ describe('import-api processing', () => {
       .reply(200, { nbOk: 18, nbErrors: 2, errors: [{ line: 3, error: 'valeur invalide' }] })
 
     await assert.rejects(
-      importApiPlugin.run(sireneContext(sireneConfig())),
+      run(sireneContext(sireneConfig())),
       /2 lignes en erreur sur 20/
     )
   })
@@ -379,7 +418,7 @@ describe('import-api processing', () => {
       .reply(200, { nbOk: 0, nbErrors: 1, cancelled: true, errors: [] })
 
     await assert.rejects(
-      importApiPlugin.run(sireneContext(sireneConfig({ drop: true }))),
+      run(sireneContext(sireneConfig({ drop: true }))),
       /annulé par Data Fair.*données précédentes sont conservées/
     )
   })
@@ -391,7 +430,7 @@ describe('import-api processing', () => {
       .reply(200, restDataset({ schema: [{ key: 'siret', type: 'string' }] }))
 
     await assert.rejects(
-      importApiPlugin.run(sireneContext(sireneConfig())),
+      run(sireneContext(sireneConfig())),
       /Colonnes absentes du schéma.*denominationUniteLegale/
     )
   })
@@ -405,7 +444,7 @@ describe('import-api processing', () => {
       .reply(400, 'this dataset is not file based')
 
     await assert.rejects(
-      importApiPlugin.run(sireneContext(sireneConfig())),
+      run(sireneContext(sireneConfig())),
       /Le chargement du fichier a échoué.*this dataset is not file based/
     )
   })
