@@ -1,6 +1,5 @@
 import type { ProcessingContext, PrepareFunction } from '@data-fair/lib-common-types/processings.js'
-import type { ProcessingConfig } from './types/processingConfig/index.ts'
-import type { Auth, Block, PaginationConfig } from './lib/types.ts'
+import type { ProcessingConfig } from '#types/processingConfig/index.ts'
 import util from 'node:util'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
@@ -13,6 +12,11 @@ import getAuthHeaders from './lib/authentications.ts'
 import { getValueByPath } from './lib/utils.ts'
 
 type ImportApiContext = ProcessingContext<ProcessingConfig>
+type Auth = ProcessingConfig['auth']
+type PaginationConfig = ProcessingConfig['pagination']
+// The nested block of an expand is declared under `dependencies` in the schema (shown once the
+// path is filled), which the type generator leaves untyped: it is restored here.
+type Block = ProcessingConfig['block'] & { expand?: { path?: string, block?: Block } }
 
 /**
  * Data Fair reports why it rejected a call in the response body. Both axios instances used
@@ -42,7 +46,7 @@ const writeChunk = (stream: fs.WriteStream, chunk: string): Promise<void> => {
 
 const getPageUrl = async (context: ImportApiContext, offset: number, data?: any, lines?: any[]): Promise<string | null> => {
   const url = (context.processingConfig as any).apiURL as string
-  const paginationConfig = (context.processingConfig as any).pagination as PaginationConfig | undefined
+  const paginationConfig = (context.processingConfig as any).pagination as PaginationConfig
 
   if (!paginationConfig || paginationConfig.method === 'none') return data ? null : url
   if (paginationConfig.method === 'queryParams') {
@@ -319,7 +323,7 @@ export const run = async (context: ImportApiContext, noUpload = false) => {
 }
 
 export const prepare: PrepareFunction<ProcessingConfig> = async ({ processingConfig, secrets }) => {
-  const auth = (processingConfig as any).auth as Auth | undefined
+  const auth = processingConfig.auth as Record<string, any> | undefined
   if (!auth) return { processingConfig, secrets }
 
   for (const key of ['password', 'apiKeyValue', 'clientSecret']) {

@@ -2,11 +2,13 @@ import config from '#config'
 import assert from 'node:assert'
 import fs from 'node:fs'
 import { it, describe, before, afterEach } from 'node:test'
+import axios from 'axios'
 import nock from 'nock'
 
 import testUtils from '@data-fair/lib-processing-dev/tests-utils.js'
 import * as importApiPlugin from '../index.ts'
 import { getValueByPath } from '../lib/utils.ts'
+import getAuthHeaders from '../lib/authentications.ts'
 
 import processingConfigSchema from '../processing-config-schema.json' with { type: 'json' }
 import processingConfig from './resources/processing-config.json' with { type: 'json' }
@@ -96,6 +98,110 @@ describe('import-api processing', () => {
   it('should get headers', async () => {
     const headers = importApiPlugin.blockHeaders((processingConfig as any).block)
     assert.equal(headers.length, 10)
+  })
+
+  describe('session authentication', () => {
+    const silentLog = { debug: async () => {}, error: async () => {} } as any
+
+    it('should log in with a JSON body and send the token in a custom header (Parkki style)', async () => {
+      const scope = nock('https://client.parkki.io')
+        .post('/v2.4/auth/app', { app_id: 'my-app', api_key: 'my-key' })
+        .reply(200, { access_token: { token: 'jwt-access', expires_at: 1 }, refresh_token: { token: 'jwt-refresh', expires_at: 2 } })
+      const headers = await getAuthHeaders({
+        authMethod: 'session',
+        loginURL: 'https://client.parkki.io/v2.4/auth/app',
+        loginMethod: 'POST',
+        username: 'my-app',
+        password: 'my-key',
+        usernameField: 'app_id',
+        passwordField: 'api_key',
+        tokenPath: 'access_token.token',
+        tokenHeader: 'X-Access-Token'
+      }, axios, silentLog)
+      assert.ok(scope.isDone())
+      assert.deepEqual(headers, { 'X-Access-Token': 'jwt-access' })
+    })
+
+    it('should keep the GLPI behaviour on a config without the new fields', async () => {
+      const scope = nock('https://glpi.test', { reqheaders: { authorization: 'Basic ' + Buffer.from('user:pass').toString('base64'), 'app-token': 'app-tok' } })
+        .get('/apirest.php/initSession')
+        .reply(200, { session_token: 'sess-tok' })
+      const headers = await getAuthHeaders({
+        authMethod: 'session',
+        loginURL: 'https://glpi.test/apirest.php/initSession',
+        username: 'user',
+        password: 'pass',
+        tokenApp: 'app-tok'
+      }, axios, silentLog)
+      assert.ok(scope.isDone())
+      assert.deepEqual(headers, { 'Session-Token': 'sess-tok', 'App-Token': 'app-tok' })
+    })
+
+    it('should fail clearly when the token is not found at the configured path', async () => {
+      nock('https://client.parkki.io').post('/v2.4/auth/app').reply(200, { access_token: { token: 'jwt' } })
+      await assert.rejects(getAuthHeaders({
+        authMethod: 'session',
+        loginURL: 'https://client.parkki.io/v2.4/auth/app',
+        loginMethod: 'POST',
+        username: 'a',
+        password: 'b',
+        usernameField: 'app_id',
+        passwordField: 'api_key',
+        tokenPath: 'token'
+      }, axios, silentLog), /token/)
+    })
+    it('should run a full import with the session token read from the secrets', async () => {
+      const login = nock('https://client.parkki.io')
+        .post('/v2.4/auth/app', { app_id: 'my-app', api_key: 'my-key' })
+        .reply(200, { access_token: { token: 'jwt-access' } })
+      const data = nock('https://client.parkki.io', { reqheaders: { 'x-access-token': 'jwt-access' } })
+        .get('/v2.4/iot/displays?contract_id=42')
+        .reply(200, { displays: [{ name: 'P+R Avenir', meta_data: { computed_value: 'OUVERT' } }] })
+      const context = testUtils.context({
+        pluginConfig: {},
+        processingConfig: {
+          block: { mapping: [{ key: 'NOM_PR', path: 'name' }, { key: 'ETAT_PR', path: 'meta_data.computed_value' }] },
+          separator: ';',
+          apiURL: 'https://client.parkki.io/v2.4/iot/displays?contract_id=42',
+          resultsPath: 'displays',
+          datasetMode: 'create',
+          dataset: { title: 'Parkki' },
+          auth: {
+            authMethod: 'session',
+            loginURL: 'https://client.parkki.io/v2.4/auth/app',
+            loginMethod: 'POST',
+            username: 'my-app',
+            password: '********',
+            usernameField: 'app_id',
+            passwordField: 'api_key',
+            tokenPath: 'access_token.token',
+            tokenHeader: 'X-Access-Token'
+          }
+        },
+        secrets: { password: 'my-key' },
+        tmpDir: 'data'
+      }, config, false)
+      await importApiPlugin.run(context, true)
+      assert.ok(login.isDone())
+      assert.ok(data.isDone())
+    })
+  })
+
+  it('should send username and password on an OAuth2 password grant', async () => {
+    const scope = nock('https://oauth.test')
+      .post('/token', (body) => body.grant_type === 'password_credentials' && body.username === 'u' && body.password === 'p')
+      .reply(200, { access_token: 'tok' })
+    const headers = await getAuthHeaders({
+      authMethod: 'oauth2',
+      grantType: 'password_credentials',
+      tokenURL: 'https://oauth.test/token',
+      clientId: 'c',
+      clientSecret: 's',
+      username: 'u',
+      password: 'p'
+    }, axios, { debug: async () => {}, error: async () => {} } as any)
+    assert.ok(scope.isDone())
+    assert.equal(headers.Authorization, 'Bearer tok')
   })
 
   it('should create a dataset from a public API without pagination', async function () {

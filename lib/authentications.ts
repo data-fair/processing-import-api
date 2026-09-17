@@ -1,6 +1,9 @@
 import type { AxiosInstance } from 'axios'
 import type { LogFunctions } from '@data-fair/lib-common-types/processings.js'
-import type { Auth } from './types.ts'
+import type { ProcessingConfig } from '#types/processingConfig/index.ts'
+import { getValueByPath } from './utils.ts'
+
+type Auth = ProcessingConfig['auth']
 
 export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Promise<Record<string, string>> => {
   const headers: Record<string, string> = {}
@@ -16,7 +19,7 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
     formData.append('client_secret', auth.clientSecret as string)
     if (auth.scope?.length) formData.append('scope', auth.scope)
 
-    if (auth.grantType === 'password_Credentials') {
+    if (auth.grantType === 'password_credentials') {
       formData.append('username', auth.username as string)
       formData.append('password', auth.password as string)
     }
@@ -30,9 +33,21 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
       throw new Error('Erreur lors de l\'obtention du token')
     }
   } else if (auth.authMethod === 'session') {
+    // Log in once, then send the returned token in a header on every data request.
+    // The defaults reproduce the historical GLPI behaviour, so configs saved before the
+    // generalization keep working without the new fields.
+    const loginMethod = auth.loginMethod === 'POST' ? 'post' : 'get'
+    const tokenPath = auth.tokenPath || 'session_token'
+    const tokenHeader = auth.tokenHeader || 'Session-Token'
     const headersSession: Record<string, string> = { 'Content-Type': 'application/json' }
+    let body: Record<string, string> | undefined
+
     if (auth.username && auth.password) {
-      headersSession.Authorization = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
+      if (auth.usernameField && auth.passwordField) {
+        body = { [auth.usernameField]: auth.username, [auth.passwordField]: auth.password }
+      } else {
+        headersSession.Authorization = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
+      }
     } else if (auth.tokenUser) {
       headersSession.Authorization = `user_token ${auth.tokenUser}`
     } else {
@@ -44,12 +59,13 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
       headersSession['App-Token'] = auth.tokenApp
     }
 
-    await log.debug(`Fetch GLPI session token with headers: ${JSON.stringify(Object.keys(headersSession))}`)
-    const sessionRes = await axios.get(auth.loginURL as string, { headers: headersSession })
-    if (sessionRes.data && sessionRes.data.session_token) {
-      headers['Session-Token'] = sessionRes.data.session_token
+    await log.debug(`Fetch session token (${loginMethod.toUpperCase()} ${auth.loginURL}) with headers: ${JSON.stringify(Object.keys(headersSession))}`)
+    const sessionRes = await axios({ method: loginMethod, url: auth.loginURL as string, headers: headersSession, data: body })
+    const token = sessionRes.data && getValueByPath(sessionRes.data, tokenPath)
+    if (typeof token === 'string' && token) {
+      headers[tokenHeader] = token
     } else {
-      throw new Error('Erreur lors de la récupération du token de session')
+      throw new Error(`Erreur lors de la récupération du token de session : aucun jeton trouvé au chemin "${tokenPath}" dans la réponse de ${auth.loginURL}`)
     }
   }
 

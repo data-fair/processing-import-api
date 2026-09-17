@@ -21,7 +21,8 @@
               "properties": {
                 "title": {
                   "type": "string",
-                  "title": "Titre"
+                  "title": "Titre",
+                  "description": "Le jeu de données est créé à la première exécution, puis mis à jour par les suivantes."
                 }
               }
             }
@@ -37,10 +38,11 @@
             },
             "dataset": {
               "type": "object",
-              "title": "Jeu de donnée existant",
+              "title": "Jeu de données existant",
+              "description": "Jeu de données fichier ou éditable. Pour un jeu éditable, les colonnes du mapping doivent déjà exister dans son schéma et une clé primaire doit être définie.",
               "layout": {
                 "getItems": {
-                  "url": "${context.dataFairUrl}/api/v1/datasets?q={q}&select=id,title&${context.ownerFilter}",
+                  "url": "${context.dataFairUrl}/api/v1/datasets?q={q}&select=id,title&size=50&${context.ownerFilter}",
                   "itemsResults": "data.results",
                   "itemTitle": "item.title",
                   "itemKey": "item.id"
@@ -74,12 +76,13 @@
       "properties": {
         "apiURL": {
           "title": "URL de l'API",
-          "type": "string"
+          "type": "string",
+          "description": "URL complète de la requête, paramètres fixes compris (ex : `https://api.exemple.fr/v2/items?contract_id=1234`). Les paramètres de pagination y sont ajoutés automatiquement. Seules les requêtes GET renvoyant du JSON sont prises en charge."
         },
         "auth": {
           "type": "object",
           "title": "Méthode d'authentification",
-          "description": "La méthode d'authentification pour acceder à l'api",
+          "description": "Les secrets (mot de passe, clé, secret client) sont stockés à part de la configuration et masqués après enregistrement.",
           "default": {
             "authMethod": "noAuth"
           },
@@ -94,7 +97,7 @@
               }
             },
             {
-              "title": "Basic Auth",
+              "title": "Basic auth",
               "properties": {
                 "authMethod": {
                   "type": "string",
@@ -117,7 +120,7 @@
               }
             },
             {
-              "title": "Bearer Token",
+              "title": "Jeton Bearer",
               "properties": {
                 "authMethod": {
                   "type": "string",
@@ -125,12 +128,13 @@
                 },
                 "token": {
                   "type": "string",
-                  "title": "Token"
+                  "title": "Jeton",
+                  "description": "Envoyé tel quel dans l'en-tête `Authorization: Bearer <jeton>`. Pour un jeton qui expire, préférez la méthode « Connexion puis jeton »."
                 }
               }
             },
             {
-              "title": "API key",
+              "title": "Clé d'API dans un en-tête",
               "properties": {
                 "authMethod": {
                   "type": "string",
@@ -138,13 +142,12 @@
                 },
                 "apiKeyHeader": {
                   "type": "string",
-                  "title": "Clé",
-                  "description": "Nom de la clé dans l'entête"
+                  "title": "Nom de l'en-tête",
+                  "description": "Ex : `X-API-Key`"
                 },
                 "apiKeyValue": {
                   "type": "string",
-                  "title": "Valeur",
-                  "description": "Valeur de la clé",
+                  "title": "Valeur de la clé",
                   "layout": {
                     "props": {
                       "type": "password",
@@ -165,51 +168,41 @@
                 "grantType": {
                   "type": "string",
                   "title": "Type de grant",
-                  "description": "Type de grant",
                   "default": "client_credentials",
                   "oneOf": [
                     {
-                      "title": "Client Credentials",
+                      "title": "Client credentials",
                       "const": "client_credentials"
                     },
                     {
-                      "title": "Password Credentials",
+                      "title": "Password credentials",
                       "const": "password_credentials"
                     }
                   ]
                 },
                 "tokenURL": {
                   "type": "string",
-                  "title": "URL d'accès au token",
-                  "description": "L'endpoint du serveur d'autorisation. Cela est utilisé pour obtenir le jeton d'accès.",
-                  "layout": {
-                    "if": "parent.data.grantType === 'client_credentials'"
-                  }
+                  "title": "URL d'obtention du jeton",
+                  "description": "Endpoint `token` du serveur d'autorisation. Le jeton obtenu est envoyé dans l'en-tête `Authorization: Bearer`."
                 },
                 "clientId": {
                   "type": "string",
-                  "title": "Client ID",
-                  "layout": {
-                    "if": "parent.data.grantType === 'client_credentials'"
-                  }
+                  "title": "Client ID"
                 },
                 "clientSecret": {
                   "type": "string",
-                  "title": "Client Secret",
+                  "title": "Client secret",
                   "layout": {
                     "props": {
                       "type": "password",
                       "autocomplete": "new-password"
-                    },
-                    "if": "parent.data.grantType === 'client_credentials'"
+                    }
                   }
                 },
                 "scope": {
                   "type": "string",
                   "title": "Scope",
-                  "layout": {
-                    "if": "parent.data.grantType === 'client_credentials'"
-                  }
+                  "description": "Optionnel, selon l'API."
                 },
                 "username": {
                   "type": "string",
@@ -232,7 +225,8 @@
               }
             },
             {
-              "title": "Session",
+              "title": "Connexion puis jeton (session)",
+              "required": ["loginURL"],
               "properties": {
                 "authMethod": {
                   "type": "string",
@@ -240,17 +234,25 @@
                 },
                 "loginURL": {
                   "type": "string",
-                  "title": "URL de initSession",
-                  "description": "http://path/to/glpi/apirest.php/initSession"
+                  "title": "URL de connexion",
+                  "description": "Appelée une fois par exécution pour obtenir un jeton, ensuite envoyé sur chaque requête dans l'en-tête configuré plus bas. Convient aux API « maison » (Parkki, GLPI…) dont le jeton expire.\n\nEx : `https://client.parkki.io/v2.4/auth/app`, `https://glpi.exemple.fr/apirest.php/initSession`"
+                },
+                "loginMethod": {
+                  "type": "string",
+                  "title": "Méthode HTTP de connexion",
+                  "default": "GET",
+                  "enum": ["GET", "POST"]
                 },
                 "username": {
                   "type": "string",
-                  "title": "Nom d'utilisateur",
+                  "title": "Identifiant",
+                  "description": "Nom d'utilisateur, ou identifiant d'application (ex : `app_id`).",
                   "default": ""
                 },
                 "password": {
                   "type": "string",
-                  "title": "Mot de passe",
+                  "title": "Secret",
+                  "description": "Mot de passe, ou clé d'API de l'application.",
                   "default": "",
                   "layout": {
                     "props": {
@@ -259,16 +261,47 @@
                     }
                   }
                 },
+                "usernameField": {
+                  "type": "string",
+                  "title": "Nom du champ « identifiant » dans le corps de la requête",
+                  "description": "Renseignez les deux noms de champ pour envoyer les identifiants en JSON dans le corps de la requête (ex : `app_id` / `api_key`). Laissez vide pour les envoyer en Basic auth (GLPI).",
+                  "layout": {
+                    "if": "parent.data.loginMethod === 'POST'",
+                    "cols": 6
+                  }
+                },
+                "passwordField": {
+                  "type": "string",
+                  "title": "Nom du champ « secret » dans le corps de la requête",
+                  "layout": {
+                    "if": "parent.data.loginMethod === 'POST'",
+                    "cols": 6
+                  }
+                },
+                "tokenPath": {
+                  "type": "string",
+                  "title": "Chemin du jeton dans la réponse",
+                  "description": "Notation par points (ex : `session_token`, `access_token.token`).",
+                  "default": "session_token",
+                  "layout": { "cols": 6 }
+                },
+                "tokenHeader": {
+                  "type": "string",
+                  "title": "Nom de l'en-tête du jeton",
+                  "description": "En-tête ajouté sur les requêtes de données (ex : `Session-Token`, `X-Access-Token`).",
+                  "default": "Session-Token",
+                  "layout": { "cols": 6 }
+                },
                 "tokenApp": {
                   "type": "string",
-                  "title": "App-Token",
-                  "description": "Chaine fournie par la configuration GLPI",
+                  "title": "App-Token (GLPI)",
+                  "description": "Chaîne fournie par la configuration GLPI, envoyée dans l'en-tête `App-Token` sur toutes les requêtes.",
                   "default": ""
                 },
                 "tokenUser": {
                   "type": "string",
-                  "title": "user_token",
-                  "description": "Chaine définis dans les préférences de l'utilisateur",
+                  "title": "user_token (GLPI)",
+                  "description": "Jeton personnel défini dans les préférences de l'utilisateur GLPI, utilisé à la place de l'identifiant et du secret.",
                   "default": ""
                 }
               }
@@ -278,6 +311,7 @@
         "pagination": {
           "title": "Pagination",
           "type": "object",
+          "description": "Si l'API renvoie ses résultats par pages, indiquez comment passer à la suivante. Toutes les pages sont lues avant l'écriture du jeu de données.",
           "default": {
             "method": "none"
           },
@@ -292,7 +326,7 @@
               }
             },
             {
-              "title": "Extraire l'URL de la page suivante depuis la donnée",
+              "title": "Lien vers la page suivante dans la réponse",
               "required": ["nextPagePath"],
               "properties": {
                 "method": {
@@ -301,24 +335,23 @@
                 },
                 "nextPagePath": {
                   "type": "string",
-                  "title": "Chemin vers la page suivante",
-                  "description": "Chemin vers la page suivante dans l'objet JSON (ex: next)"
+                  "title": "Chemin de l'URL de la page suivante",
+                  "description": "Notation par points dans la réponse JSON (ex : `next`, `links.next`). La pagination s'arrête quand ce chemin est vide."
                 },
                 "limitKey": {
                   "type": "string",
-                  "title": "Nom du paramètre de type \"limit\"",
-                  "description": "Ce paramètre est utilisé pour définir le nombre d'éléments à récupérer. (ex: limit ou size)"
+                  "title": "Paramètre « limit »",
+                  "description": "Optionnel. Nom du paramètre d'URL fixant la taille de page (ex : `limit`, `size`), ajouté à la première requête seulement."
                 },
                 "limitValue": {
                   "type": "number",
-                  "title": "Nombre d'éléments par page",
-                  "description": "Nombre d'éléments à récupérer par page",
+                  "title": "Éléments par page",
                   "default": 1000
                 }
               }
             },
             {
-              "title": "Paramètres dans l'URL",
+              "title": "Paramètres offset / limit dans l'URL",
               "required": ["offsetKey"],
               "properties": {
                 "method": {
@@ -327,25 +360,25 @@
                 },
                 "offsetKey": {
                   "type": "string",
-                  "title": "Nom du paramètre de type \"offset\"",
-                  "description": "Ce paramètre est utilisé pour progresser dans la pagination. Il est incrémenté à chaque appel. (ex: offset ou skip)",
+                  "title": "Paramètre « offset »",
+                  "description": "Nom du paramètre d'URL incrémenté à chaque page (ex : `offset`, `skip`, `page`).",
                   "default": "offset"
                 },
                 "offsetPages": {
                   "type": "boolean",
-                  "title": "Offset en nombre de pages",
-                  "description": "Incrémente le paramètre d'offset de 1 par page. Par défaut l'incrément est celui du nombre de lignes lues.",
+                  "title": "Offset en numéro de page",
+                  "description": "Incrémente le paramètre de 1 à chaque page (`page=1`, `page=2`…) plutôt que du nombre de lignes déjà lues.",
                   "default": false
                 },
                 "limitKey": {
                   "type": "string",
-                  "title": "Nom du paramètre de type \"limit\"",
-                  "description": "Ce paramètre est utilisé pour définir le nombre d'éléments à récupérer. (ex: limit ou take)"
+                  "title": "Paramètre « limit »",
+                  "description": "Nom du paramètre d'URL fixant la taille de page (ex : `limit`, `take`). Sans lui, la pagination continue tant que l'API renvoie des lignes."
                 },
                 "limitValue": {
                   "type": "number",
-                  "title": "Nombre d'éléments par page",
-                  "description": "Nombre d'éléments à récupérer par page",
+                  "title": "Éléments par page",
+                  "description": "Une page plus courte que cette valeur marque la fin de la pagination.",
                   "default": 1000
                 }
               }
@@ -360,14 +393,15 @@
       "properties": {
         "resultsPath": {
           "type": "string",
-          "title": "Chemin des résultats",
-          "description": "Chemin d'accès du tableau de résultats dans le json",
+          "title": "Chemin du tableau de résultats",
+          "description": "Notation par points vers le tableau à parcourir dans la réponse JSON (ex : `displays`, `data.results`). Laissez vide si la réponse est directement le tableau.",
           "default": ""
         },
         "block": { "$ref": "#/definitions/block" },
         "separator": {
           "type": "string",
-          "title": "Séparateur pour les tableaux",
+          "title": "Séparateur des valeurs multiples",
+          "description": "Utilisé pour concaténer les valeurs d'un chemin `[]` dans une seule colonne.",
           "default": ";"
         }
       }
@@ -379,8 +413,8 @@
       "properties": {
         "mapping": {
           "type": "array",
-          "title": "Champs à récupérer",
-          "description": "Les colonnes qui seront récupérées depuis ce niveau",
+          "title": "Colonnes",
+          "description": "Une ligne par colonne du jeu de données, avec le chemin de la valeur dans chaque élément du tableau de résultats.",
           "layout": {
             "listEditMode": "inline",
             "messages": { "addItem": "Ajouter une colonne" }
@@ -391,28 +425,29 @@
             "properties": {
               "key": {
                 "type": "string",
-                "title": "Identifiant de la colonne",
-                "description": "Clé de la colonne",
+                "title": "Clé de la colonne",
+                "description": "Identifiant de la colonne dans le jeu de données (ex : `NOM_PR`).",
                 "layout": { "cols": 6 }
               },
               "path": {
                 "type": "string",
-                "title": "Chemin de la colonne",
-                "description": "Chemin d'accès vers la donnée. Utilisez la notation par points pour naviguer dans les objets et `[]` pour extraire des données de tableaux.\n\n**Exemples de syntaxe :**\n\n* **Simple :** `owner.name` permet d'accéder à une propriété imbriquée.\n\n* **Tableau (Multivalué) :** `topics[].title` récupère tous les titres du tableau et les concatène dans un champ multivalué.\n\n* **Index précis :** `attributes.0` cible le premier élément d'un tableau, `attributes.1.title` le titre du deuxième. Utilisez le numéro de position (commence à 0), pas `[0]`.",
+                "title": "Chemin dans le JSON",
+                "description": "Notation par points depuis l'élément courant, `[]` pour extraire toutes les valeurs d'un tableau.\n\n* `owner.name` : propriété imbriquée.\n* `topics[].title` : tous les titres du tableau, concaténés avec le séparateur.\n* `attributes.0` ou `attributes.1.title` : un élément précis d'un tableau, par sa position (à partir de 0, pas `[0]`).",
                 "layout": { "cols": 6 }
               }
             }
           }
         },
         "expand": {
-          "title": "Données en profondeur d'un tableau",
+          "title": "Développer un tableau imbriqué en plusieurs lignes",
           "type": "object",
           "layout": "card",
+          "description": "Optionnel. Produit une ligne par élément du tableau indiqué, en répétant les colonnes du niveau supérieur.",
           "properties": {
             "path": {
               "type": "string",
-              "title": "Chemin de la colonne",
-              "description": "Chemin d'accès dans le json à partir de cette position"
+              "title": "Chemin du tableau",
+              "description": "Notation par points depuis l'élément courant (ex : `children`)."
             }
           },
           "dependencies": {
