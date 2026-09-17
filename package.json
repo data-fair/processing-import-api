@@ -37,6 +37,7 @@
     "@data-fair/lib-types-builder": "^1.7.0",
     "@data-fair/lib-utils": "^1.10.2",
     "@types/node": "^25.5.0",
+    "axios": "^1.20.0",
     "config": "^4.4.1",
     "eslint": "^9.26.0",
     "husky": "^9.1.7",
@@ -46,7 +47,6 @@
     "ws": "^8.19.0"
   },
   "dependencies": {
-    "axios": "^1.6.7",
     "csv-stringify": "^6.6.0",
     "form-data": "^4.0.5",
     "slugify": "^1.6.6"
