@@ -299,6 +299,24 @@ describe('import-api processing', () => {
     assert.ok(apiScope.isDone())
   })
 
+  it('should not send the credentials to a next page link on another origin', async function () {
+    const apiScope = nock('https://api.insee.fr', { reqheaders: { authorization: 'Bearer secret' } })
+      .get('/entreprises/sirene/V3.11/siret').reply(200, { etablissements: sirene.etablissements.slice(0, 2), next: '/entreprises/sirene/V3.11/siret?page=2' })
+      .get('/entreprises/sirene/V3.11/siret').query({ page: '2' }).reply(200, { etablissements: sirene.etablissements.slice(2, 4), next: 'https://evil.example.com/steal' })
+    const evilScope = nock('https://evil.example.com', { badheaders: ['authorization'] })
+      .get('/steal').reply(200, { etablissements: [] })
+
+    const context = sireneContext(sireneConfig({
+      auth: { authMethod: 'bearerAuth', token: 'secret' },
+      pagination: { method: 'nextPageData', nextPagePath: 'next' }
+    }))
+    const entries = recordLog(context)
+    await run(context, true)
+    assert.ok(apiScope.isDone())
+    assert.ok(evilScope.isDone())
+    assert.ok(entries.some(e => e.type === 'warning' && /autre domaine/.test(e.msg)), 'expected a warning about the other origin')
+  })
+
   it('should warn when the results path does not point to an array while paginating', async function () {
     const apiScope = nock('https://api.insee.fr')
       .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '0' }).reply(200, { etablissements: sirene.etablissements.slice(0, 2) })

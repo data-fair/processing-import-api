@@ -36,7 +36,21 @@ export const getPageUrl = async (context: ProcessingContext<ProcessingConfig>, o
       }
       return urlObj.href
     }
-    return getValueByPath(data, paginationConfig.nextPagePath)
+    const next = getValueByPath(data, paginationConfig.nextPagePath)
+    // a relative link is relative to the API, never to data-fair
+    return next ? new URL(next, url).href : null
   }
   return null
+}
+
+/**
+ * Credentials of the configured API are only sent to its own origin: a next page link comes from
+ * the remote server and can point anywhere.
+ */
+export const isSameOrigin = (url: string, apiURL: string): boolean => {
+  try {
+    return new URL(url).origin === new URL(apiURL).origin
+  } catch {
+    return false
+  }
 }

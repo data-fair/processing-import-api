@@ -8,7 +8,7 @@ import slugify from 'slugify'
 import { stringify } from 'csv-stringify/sync'
 import getAuthHeaders from './authentications.ts'
 import { secretKeys } from './prepare.ts'
-import { getPageUrl } from './pagination.ts'
+import { getPageUrl, isSameOrigin } from './pagination.ts'
 import { flattenData, blockHeaders } from './flatten.ts'
 import { getTargetDataset, createEditableDataset, uploadToFileDataset, uploadToEditableDataset, datasetTitle } from './upload.ts'
 import { getValueByPath } from './utils.ts'
@@ -39,7 +39,8 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
 
   // ------------------ Récupération, conversion et envoi des données ------------------
   await log.step('Récupération et conversion des données')
-  let headers: Record<string, string> = { Accept: 'application/json' }
+  const publicHeaders: Record<string, string> = { Accept: 'application/json' }
+  let headers = publicHeaders
   if (cfg.auth && cfg.auth.authMethod !== 'noAuth') {
     if (context.secrets) {
       for (const key of secretKeys) {
@@ -62,6 +63,7 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
   let totalLines = 0
   let pages = 0
   let warnedLargePage = false
+  let warnedOtherOrigin = false
   let previousPage: string | undefined
   // The run log is stored whole in the run document, so a paginated import must not write
   // one entry per page: thousands of pages with a long URL each would overflow it. The API is
@@ -73,10 +75,15 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
   while (nextPageURL) {
     if (shouldBeStopped) break
     await log.debug(`Récupération de ${nextPageURL}`)
+    const sameOrigin = isSameOrigin(nextPageURL, cfg.apiURL)
+    if (!sameOrigin && headers !== publicHeaders && !warnedOtherOrigin) {
+      await log.warning(`La page suivante est sur un autre domaine que l'API (${nextPageURL}) : elle est récupérée sans les informations d'authentification.`)
+      warnedOtherOrigin = true
+    }
     const results = await axios({
       method: 'get',
       url: nextPageURL,
-      headers,
+      headers: sameOrigin ? headers : publicHeaders,
       timeout: 10 * 60000 // very long timeout as we don't control the API and some export logic are very slow
     })
     const data = getValueByPath(results.data, cfg.resultsPath)
