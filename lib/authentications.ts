@@ -30,8 +30,9 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
       headers.Authorization = `Bearer ${res.data.access_token}`
     } catch (e: any) {
       // only the response body: the serialized error would carry the request, client secret included
-      await log.error('Erreur lors de l\'obtention du token', e?.response?.data ?? e?.data)
-      throw new Error('Erreur lors de l\'obtention du token')
+      const status = e?.response?.status ?? e?.status
+      await log.error(`Failed to get the OAuth2 token from ${auth.tokenURL}`, e?.response?.data ?? e?.data)
+      throw new Error(`Failed to get the OAuth2 token from ${auth.tokenURL}${status ? ` (HTTP ${status})` : `: ${e?.message ?? e}`}`)
     }
   } else if (auth.authMethod === 'session') {
     // Log in once, then send the returned token in a header on every data request.
@@ -52,7 +53,7 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
     } else if (auth.tokenUser) {
       headersSession.Authorization = `user_token ${auth.tokenUser}`
     } else {
-      throw new Error('Aucune méthode d\'authentification n\'a été renseignée')
+      throw new Error('Session authentication: fill in either the identifier and the secret, or the user_token')
     }
 
     if (auth.tokenApp) {
@@ -67,7 +68,7 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
     if (typeof token === 'string' && token) {
       headers[tokenHeader] = token
     } else {
-      throw new Error(`Erreur lors de la récupération du token de session : aucun jeton trouvé au chemin "${tokenPath}" dans la réponse de ${auth.loginURL}`)
+      throw new Error(`Failed to get the session token: no token found at the path "${tokenPath}" in the response of ${auth.loginURL}`)
     }
   }
 

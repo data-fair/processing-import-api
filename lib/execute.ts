@@ -37,8 +37,8 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
   const { processingConfig, tmpDir, axios, log } = context
   const cfg = processingConfig as any
 
-  // ------------------ Récupération, conversion et envoi des données ------------------
-  await log.step('Récupération et conversion des données')
+  // ------------------ Fetch, convert and upload the data ------------------
+  await log.step('Fetch and convert the data')
   const publicHeaders: Record<string, string> = { Accept: 'application/json' }
   let headers = publicHeaders
   if (cfg.auth && cfg.auth.authMethod !== 'noAuth') {
@@ -68,16 +68,16 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
   // The run log is stored whole in the run document, so a paginated import must not write
   // one entry per page: thousands of pages with a long URL each would overflow it. The API is
   // named once, the pages update a single progress entry, and the URLs only go to debug.
-  await log.info(`Récupération de ${cfg.apiURL}`)
+  await log.info(`Fetch ${cfg.apiURL}`)
   const paginated = !!cfg.pagination && cfg.pagination.method !== 'none'
-  const pagesTask = 'Récupération des données'
+  const pagesTask = 'Fetched rows'
   if (paginated) await log.task(pagesTask)
   while (nextPageURL) {
     if (shouldBeStopped) break
-    await log.debug(`Récupération de ${nextPageURL}`)
+    await log.debug(`Fetch ${nextPageURL}`)
     const sameOrigin = isSameOrigin(nextPageURL, cfg.apiURL)
     if (!sameOrigin && headers !== publicHeaders && !warnedOtherOrigin) {
-      await log.warning(`La page suivante est sur un autre domaine que l'API (${nextPageURL}) : elle est récupérée sans les informations d'authentification.`)
+      await log.warning(`The next page is on another origin than the API (${nextPageURL}): it is fetched without the authentication credentials.`)
       warnedOtherOrigin = true
     }
     const pageHeaders = sameOrigin ? headers : publicHeaders
@@ -94,18 +94,18 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
       // An API that ignores the pagination parameter answers the same page forever
       const page = createHash('sha1').update(JSON.stringify(data)).digest('hex')
       if (page === previousPage) {
-        throw new Error(`L'API a renvoyé deux fois la même page (${nextPageURL}) : la pagination est probablement mal configurée, vérifiez que l'API prend bien en compte le paramètre d'offset ou de page suivante.`)
+        throw new Error(`The API returned the same page twice (${nextPageURL}): the pagination is probably misconfigured, check that the API takes the offset or next page parameter into account.`)
       }
       previousPage = page
       if (!Array.isArray(data) && pages === 0) {
-        await log.warning(`Le « Chemin des résultats » (${cfg.resultsPath ? `« ${cfg.resultsPath} »` : 'vide'}) ne désigne pas un tableau : la réponse est traitée comme une ligne unique et la pagination s'arrête.`)
+        await log.warning(`The results array path (${cfg.resultsPath ? `"${cfg.resultsPath}"` : 'empty'}) does not point to an array: the response is handled as a single row and the pagination stops.`)
       }
     }
     const lines = ([] as Array<Record<string, any>>).concat(...(Array.isArray(data) ? data : [data]).map((d: any) => flattenData(d, cfg.block, cfg.separator)))
 
     if (lines.length === 0) break
     if (data.length > 10000 && !warnedLargePage) {
-      await log.warning('Le nombre de lignes est trop important, privilégier une pagination plus petite.')
+      await log.warning(`A page holds ${data.length} items: prefer a smaller page size to limit the memory used.`)
       warnedLargePage = true
     }
 
@@ -121,8 +121,8 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
   }
   // close the progress entry, the UI keeps an indeterminate bar while total is unknown
   if (paginated && totalLines > 0) await log.progress(pagesTask, totalLines, totalLines)
-  if (totalLines === 0) await log.warning('Aucune donnée n\'a été récupérée')
-  else await log.info(`${pages} page${pages > 1 ? 's' : ''} récupérée${pages > 1 ? 's' : ''}, ${totalLines} ligne${totalLines > 1 ? 's' : ''} convertie${totalLines > 1 ? 's' : ''}`)
+  if (totalLines === 0) await log.warning('No data was fetched')
+  else await log.info(`${pages} page${pages > 1 ? 's' : ''} fetched, ${totalLines} row${totalLines > 1 ? 's' : ''} converted`)
   // the file has to be fully flushed before it is read back for the upload
   writeStream.end()
   await finished(writeStream)
@@ -130,13 +130,13 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
 
   // A stopped run must never publish a truncated dataset
   if (shouldBeStopped) {
-    await log.warning('Traitement interrompu : les données récupérées ne sont pas envoyées.')
+    await log.warning('Processing stopped: the fetched data is not uploaded.')
     fs.unlinkSync(filePath)
     return
   }
 
   if (!noUpload) {
-    await log.step('Chargement des données')
+    await log.step('Upload the data')
     let targetDataset = cfg.dataset?.id ? await getTargetDataset(context, cfg.dataset.id) : null
     if (!targetDataset && cfg.editableCreate) targetDataset = await createEditableDataset(context, columns)
 
@@ -146,7 +146,7 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
       await uploadToFileDataset(context, filePath, filename)
     }
 
-    await log.info('Suppression du fichier CSV temporaire')
+    await log.info('Delete the temporary CSV file')
     fs.unlinkSync(filePath)
   }
 }

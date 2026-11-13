@@ -17,7 +17,7 @@ export const getPageUrl = async (context: ProcessingContext<ProcessingConfig>, o
     const urlObj = new URL(url)
     if (paginationConfig.limitKey) {
       if (lines && paginationConfig.limitValue && lines.length < paginationConfig.limitValue) {
-        await context.log.info('Le nombre de lignes récupérées est inférieur au nombre de lignes demandé, fin de la pagination.')
+        await context.log.info(`The last page holds ${lines.length} items, fewer than the ${paginationConfig.limitValue} requested: end of the pagination.`)
         return null
       }
       await context.log.debug(`Limit parameter: ${paginationConfig.limitKey}=${paginationConfig.limitValue}`)

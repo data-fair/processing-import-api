@@ -32,9 +32,9 @@ export const getTargetDataset = async (context: ProcessingContext<ProcessingConf
     return (await context.axios.get(`api/v1/datasets/${datasetId}`)).data
   } catch (err: any) {
     if (errorStatus(err) === 404) {
-      throw new Error(`Le jeu de données id="${datasetId}" n'existe pas, il a peut-être été supprimé.`)
+      throw new Error(`The dataset id="${datasetId}" does not exist, it may have been deleted.`)
     }
-    throw new Error(`Impossible de lire le jeu de données id="${datasetId}" : ${errorMessage(err)}`)
+    throw new Error(`Failed to read the dataset id="${datasetId}": ${errorMessage(err)}`)
   }
 }
 
@@ -63,10 +63,10 @@ export const createEditableDataset = async (context: ProcessingContext<Processin
       extras: { processingId }
     }), log)).data
   } catch (err) {
-    throw new Error(`La création du jeu de données éditable a échoué : ${errorMessage(err)}`)
+    throw new Error(`Failed to create the editable dataset: ${errorMessage(err)}`)
   }
 
-  await log.info(`jeu de donnée éditable créé, id="${dataset.id}", title="${dataset.title}"`)
+  await log.info(`Editable dataset created, id="${dataset.id}", title="${dataset.title}"`)
   await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title, isRest: true } })
   return dataset
 }
@@ -94,14 +94,14 @@ export const uploadToFileDataset = async (context: ProcessingContext<ProcessingC
       })
     }, log)).data
   } catch (err) {
-    throw new Error(`Le chargement du fichier a échoué : ${errorMessage(err)}`)
+    throw new Error(`Failed to upload the file: ${errorMessage(err)}`)
   }
 
-  await log.info(`jeu de donnée ${cfg.datasetMode === 'update' ? 'mis à jour' : 'créé'}, id="${dataset.id}", title="${dataset.title}"`)
+  await log.info(`Dataset ${cfg.datasetMode === 'update' ? 'updated' : 'created'}, id="${dataset.id}", title="${dataset.title}"`)
   if (cfg.datasetMode === 'create') {
     await patchConfig({ datasetMode: 'update', dataset: { id: dataset.id, title: dataset.title, isRest: false } })
   }
-  await log.info('Toutes les données ont été envoyées')
+  await log.info('All the data was uploaded')
 }
 
 /**
@@ -129,16 +129,16 @@ export const uploadToEditableDataset = async (
   }
   const unknown = columns.filter(c => !declared.has(c))
   if (unknown.length) {
-    throw new Error(`Colonnes absentes du schéma du jeu de données éditable : ${unknown.join(', ')}. Ajoutez-les au schéma du jeu de données, ou corrigez les clés du mapping.`)
+    throw new Error(`Columns missing from the schema of the editable dataset: ${unknown.join(', ')}. Add them to the dataset schema, or fix the keys of the mapping.`)
   }
 
   if (totalLines === 0) {
-    if (drop) throw new Error('Aucune ligne n\'a été récupérée depuis l\'API : import annulé pour ne pas vider le jeu de données.')
-    await log.warning('Aucune ligne n\'a été récupérée depuis l\'API : le jeu de données est laissé inchangé.')
+    if (drop) throw new Error('No row was fetched from the API: import cancelled so as not to empty the dataset.')
+    await log.warning('No row was fetched from the API: the dataset is left unchanged.')
     return
   }
   if (!drop && !dataset.primaryKey?.length) {
-    await log.warning('Le jeu de données n\'a pas de clé primaire : chaque exécution ajoutera de nouvelles lignes au lieu de mettre à jour les existantes. Définissez une clé primaire sur le jeu de données, ou activez le remplacement des données.')
+    await log.warning('The dataset has no primary key: each run will add new rows instead of updating the existing ones. Define a primary key on the dataset, or enable the data replacement.')
   }
 
   let summary: any
@@ -158,22 +158,22 @@ export const uploadToEditableDataset = async (
       })
     }, log)).data
   } catch (err) {
-    throw new Error(`Le chargement des lignes a échoué : ${errorMessage(err)}`)
+    throw new Error(`Failed to upload the rows: ${errorMessage(err)}`)
   }
 
   // _bulk_lines decides its status code when it flushes the first batch, so a later failure
   // still answers 200. The summary is the only reliable signal.
   for (const error of (summary.errors ?? []).slice(0, 10)) {
-    await log.error(`ligne ${error.line} : ${error.error}`)
+    await log.error(`Row ${error.line}: ${error.error}`)
   }
   if (summary.cancelled) {
-    throw new Error(`Le remplacement des données a été annulé par Data Fair (${summary.nbErrors} lignes en erreur), les données précédentes sont conservées.`)
+    throw new Error(`Data Fair cancelled the data replacement (${summary.nbErrors} rows in error), the previous data is kept.`)
   }
   if (summary.nbErrors) {
-    throw new Error(`${summary.nbErrors} lignes en erreur sur ${(summary.nbOk ?? 0) + summary.nbErrors} envoyées.`)
+    throw new Error(`${summary.nbErrors} rows in error out of ${(summary.nbOk ?? 0) + summary.nbErrors} sent.`)
   }
 
-  await log.info(`jeu de donnée éditable mis à jour, id="${dataset.id}", title="${dataset.title}"`)
-  await log.info(`${summary.nbCreated ?? 0} lignes créées, ${summary.nbModified ?? 0} modifiées, ${summary.nbDeleted ?? 0} supprimées, ${summary.nbNotModified ?? 0} inchangées`)
-  await log.info('Toutes les données ont été envoyées')
+  await log.info(`Editable dataset updated, id="${dataset.id}", title="${dataset.title}"`)
+  await log.info(`${summary.nbCreated ?? 0} rows created, ${summary.nbModified ?? 0} modified, ${summary.nbDeleted ?? 0} deleted, ${summary.nbNotModified ?? 0} unchanged`)
+  await log.info('All the data was uploaded')
 }

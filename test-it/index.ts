@@ -276,13 +276,13 @@ describe('import-api processing', () => {
 
     // the API is named once, and the pages go through the progress of a single task
     const infos = entries.filter(e => e.type === 'info')
-    assert.deepStrictEqual(infos.filter(e => e.msg.startsWith('Récupération de')).map(e => e.msg), ['Récupération de https://api.insee.fr/entreprises/sirene/V3.11/siret'])
+    assert.deepStrictEqual(infos.filter(e => e.msg.startsWith('Fetch ')).map(e => e.msg), ['Fetch https://api.insee.fr/entreprises/sirene/V3.11/siret'])
     assert.strictEqual(entries.filter(e => e.type === 'task').length, 1)
     const taskName = entries.find(e => e.type === 'task')!.msg
     assert.deepStrictEqual(entries.filter(e => e.type === 'progress').map(e => [e.msg, e.progress, e.total]), [[taskName, 2, 0], [taskName, 4, 0], [taskName, 6, 0], [taskName, 6, 6]])
     // nothing else is written per page, only the final summary
     assert.strictEqual(infos.length, 2)
-    assert.match(infos[1].msg, /^3 pages récupérées, 6 lignes converties$/)
+    assert.match(infos[1].msg, /^3 pages fetched, 6 rows converted$/)
     assert.strictEqual(entries.filter(e => e.type === 'warning').length, 0)
   })
 
@@ -295,7 +295,7 @@ describe('import-api processing', () => {
     const context = sireneContext(sireneConfig({
       pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
     }))
-    await assert.rejects(run(context, true), /même page/)
+    await assert.rejects(run(context, true), /same page twice/)
     assert.ok(apiScope.isDone())
   })
 
@@ -314,7 +314,7 @@ describe('import-api processing', () => {
     await run(context, true)
     assert.ok(apiScope.isDone())
     assert.ok(evilScope.isDone())
-    assert.ok(entries.some(e => e.type === 'warning' && /autre domaine/.test(e.msg)), 'expected a warning about the other origin')
+    assert.ok(entries.some(e => e.type === 'warning' && /another origin/.test(e.msg)), 'expected a warning about the other origin')
   })
 
   it('should warn when the results path does not point to an array while paginating', async function () {
@@ -328,7 +328,7 @@ describe('import-api processing', () => {
     const entries = recordLog(context)
     await run(context, true)
     assert.ok(apiScope.isDone())
-    assert.ok(entries.some(e => e.type === 'warning' && /Chemin des résultats/.test(e.msg)), 'expected a warning about the results path')
+    assert.ok(entries.some(e => e.type === 'warning' && /results array path/.test(e.msg)), 'expected a warning about the results path')
   })
 
   it('should stop between two pages and never upload a truncated file', async function () {
@@ -352,7 +352,7 @@ describe('import-api processing', () => {
     assert.ok(apiScope.isDone())
     assert.ok(!secondPage.isDone(), 'the second page must not be fetched after a stop')
     assert.ok(!dfScope.isDone(), 'a stopped run must not upload anything')
-    assert.ok(entries.some(e => e.type === 'warning' && /interrompu/i.test(e.msg)), 'expected a warning about the interruption')
+    assert.ok(entries.some(e => e.type === 'warning' && /stopped/i.test(e.msg)), 'expected a warning about the interruption')
     assert.ok(!fs.existsSync('data/sirene.csv'), 'the temporary CSV must be removed')
   })
 
@@ -419,7 +419,7 @@ describe('import-api processing', () => {
 
     assert.ok(apiScope.isDone())
     // a pending mock here would mean the file route was taken instead of _bulk_lines
-    assert.ok(dfScope.isDone(), 'le jeu éditable doit être alimenté via _bulk_lines')
+    assert.ok(dfScope.isDone(), 'the editable dataset must be fed through _bulk_lines')
   })
 
   it('should pass drop=true and refuse to empty an editable dataset when the API returns nothing', async function () {
@@ -432,7 +432,7 @@ describe('import-api processing', () => {
 
     await assert.rejects(
       run(sireneContext(sireneConfig({ drop: true }))),
-      /import annulé pour ne pas vider le jeu de données/
+      /import cancelled so as not to empty the dataset/
     )
   })
 
@@ -466,7 +466,7 @@ describe('import-api processing', () => {
 
     await assert.rejects(
       run(sireneContext(sireneConfig())),
-      /2 lignes en erreur sur 20/
+      /2 rows in error out of 20/
     )
   })
 
@@ -481,7 +481,7 @@ describe('import-api processing', () => {
 
     await assert.rejects(
       run(sireneContext(sireneConfig({ drop: true }))),
-      /annulé par Data Fair.*données précédentes sont conservées/
+      /Data Fair cancelled the data replacement.*the previous data is kept/
     )
   })
 
@@ -493,7 +493,7 @@ describe('import-api processing', () => {
 
     await assert.rejects(
       run(sireneContext(sireneConfig())),
-      /Colonnes absentes du schéma.*denominationUniteLegale/
+      /Columns missing from the schema.*denominationUniteLegale/
     )
   })
 
@@ -507,7 +507,7 @@ describe('import-api processing', () => {
 
     await assert.rejects(
       run(sireneContext(sireneConfig())),
-      /Le chargement du fichier a échoué.*this dataset is not file based/
+      /Failed to upload the file.*this dataset is not file based/
     )
   })
 
