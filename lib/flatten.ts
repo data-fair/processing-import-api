@@ -14,11 +14,11 @@ export const flattenData = (data: any, block?: Block, separator = ';', common: R
     base = Object.assign({}, ...block.mapping.map(m => {
       const values = getValueByPath(data, m.path)
       if (values == null) return {}
-      return { [m.key]: (values.constructor === Array) ? values.join(separator) : getValueByPath(data, m.path) }
+      return { [m.key]: (values.constructor === Array) ? values.join(separator) : values }
     }))
   }
   if (block?.expand?.path) {
-    return ([] as Array<Record<string, any>>).concat(...getValueByPath(data, block.expand.path).map((d: any) => flattenData(d, block.expand?.block, separator, { ...base, ...common })))
+    return getValueByPath(data, block.expand.path).flatMap((d: any) => flattenData(d, block.expand?.block, separator, { ...base, ...common }))
   } else return [{ ...base, ...common }]
 }
 

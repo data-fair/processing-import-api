@@ -101,7 +101,8 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
         await log.warning(`The results array path (${cfg.resultsPath ? `"${cfg.resultsPath}"` : 'empty'}) does not point to an array: the response is handled as a single row and the pagination stops.`)
       }
     }
-    const lines = ([] as Array<Record<string, any>>).concat(...(Array.isArray(data) ? data : [data]).map((d: any) => flattenData(d, cfg.block, cfg.separator)))
+    // flatMap rather than concat(...spread): spreading a page of 100k+ items overflows the call stack
+    const lines = (Array.isArray(data) ? data : [data]).flatMap((d: any) => flattenData(d, cfg.block, cfg.separator))
 
     if (lines.length === 0) break
     if (data.length > 10000 && !warnedLargePage) {
