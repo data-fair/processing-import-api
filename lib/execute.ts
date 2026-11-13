@@ -11,7 +11,7 @@ import { secretKeys } from './prepare.ts'
 import { getPageUrl, isSameOrigin } from './pagination.ts'
 import { flattenData, blockHeaders } from './flatten.ts'
 import { getTargetDataset, createEditableDataset, uploadToFileDataset, uploadToEditableDataset, datasetTitle } from './upload.ts'
-import { getValueByPath } from './utils.ts'
+import { getValueByPath, externalRequestOptions } from './utils.ts'
 
 /**
  * True when an interruption is requested: the page loop ends and nothing is uploaded.
@@ -80,10 +80,12 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
       await log.warning(`La page suivante est sur un autre domaine que l'API (${nextPageURL}) : elle est récupérée sans les informations d'authentification.`)
       warnedOtherOrigin = true
     }
+    const pageHeaders = sameOrigin ? headers : publicHeaders
     const results = await axios({
       method: 'get',
       url: nextPageURL,
-      headers: sameOrigin ? headers : publicHeaders,
+      headers: pageHeaders,
+      ...externalRequestOptions(nextPageURL, Object.keys(pageHeaders).filter(h => h !== 'Accept')),
       timeout: 10 * 60000 // very long timeout as we don't control the API and some export logic are very slow
     })
     const data = getValueByPath(results.data, cfg.resultsPath)

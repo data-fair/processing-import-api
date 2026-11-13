@@ -3,6 +3,7 @@ import type { ProcessingConfig } from '#types/processingConfig/index.ts'
 import util from 'node:util'
 import fs from 'node:fs'
 import FormData from 'form-data'
+import { dfRetry } from './utils.ts'
 
 /**
  * Data Fair reports why it rejected a call in the response body. Both axios instances used
@@ -55,12 +56,12 @@ export const createEditableDataset = async (context: ProcessingContext<Processin
 
   let dataset
   try {
-    dataset = (await axios.post('api/v1/datasets', {
+    dataset = (await dfRetry(() => axios.post('api/v1/datasets', {
       title: datasetTitle(cfg),
       isRest: true,
       schema: columns.map(key => ({ key, type: 'string' })),
       extras: { processingId }
-    })).data
+    }), log)).data
   } catch (err) {
     throw new Error(`La création du jeu de données éditable a échoué : ${errorMessage(err)}`)
   }
@@ -74,22 +75,24 @@ export const uploadToFileDataset = async (context: ProcessingContext<ProcessingC
   const { processingConfig, processingId, axios, log, patchConfig } = context
   const cfg = processingConfig as any
 
-  const formData: any = new FormData()
-  formData.append('title', datasetTitle(cfg))
-  formData.append('extras', JSON.stringify({ processingId }))
-  formData.append('file', fs.createReadStream(filePath), { filename })
-  formData.getLength = util.promisify(formData.getLength)
-
   let dataset
   try {
-    dataset = (await axios({
-      method: 'post',
-      url: 'api/v1/datasets/' + (cfg.dataset?.id || ''),
-      data: formData,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
-    })).data
+    // the multipart body streams the file, it is rebuilt on each attempt
+    dataset = (await dfRetry(async () => {
+      const formData: any = new FormData()
+      formData.append('title', datasetTitle(cfg))
+      formData.append('extras', JSON.stringify({ processingId }))
+      formData.append('file', fs.createReadStream(filePath), { filename })
+      formData.getLength = util.promisify(formData.getLength)
+      return axios({
+        method: 'post',
+        url: 'api/v1/datasets/' + (cfg.dataset?.id || ''),
+        data: formData,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
+      })
+    }, log)).data
   } catch (err) {
     throw new Error(`Le chargement du fichier a échoué : ${errorMessage(err)}`)
   }
@@ -138,20 +141,22 @@ export const uploadToEditableDataset = async (
     await log.warning('Le jeu de données n\'a pas de clé primaire : chaque exécution ajoutera de nouvelles lignes au lieu de mettre à jour les existantes. Définissez une clé primaire sur le jeu de données, ou activez le remplacement des données.')
   }
 
-  const formData: any = new FormData()
-  formData.append('actions', fs.createReadStream(filePath), { filename })
-  formData.getLength = util.promisify(formData.getLength)
-
   let summary: any
   try {
-    summary = (await axios({
-      method: 'post',
-      url: `api/v1/datasets/${dataset.id}/_bulk_lines?drop=${drop}`,
-      data: formData,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-      headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
-    })).data
+    // the multipart body streams the file, it is rebuilt on each attempt
+    summary = (await dfRetry(async () => {
+      const formData: any = new FormData()
+      formData.append('actions', fs.createReadStream(filePath), { filename })
+      formData.getLength = util.promisify(formData.getLength)
+      return axios({
+        method: 'post',
+        url: `api/v1/datasets/${dataset.id}/_bulk_lines?drop=${drop}`,
+        data: formData,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        headers: { ...formData.getHeaders(), 'content-length': await formData.getLength() }
+      })
+    }, log)).data
   } catch (err) {
     throw new Error(`Le chargement des lignes a échoué : ${errorMessage(err)}`)
   }

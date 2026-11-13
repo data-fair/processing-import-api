@@ -25,11 +25,12 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
     }
 
     try {
-      const res = await axios.post(auth.tokenURL as string, formData)
+      // the body carries the client secret: never follow a redirect that would resend it elsewhere
+      const res = await axios.post(auth.tokenURL as string, formData, { maxRedirects: 0, timeout: 60000 })
       headers.Authorization = `Bearer ${res.data.access_token}`
-    } catch (e) {
-      await log.error('Erreur lors de l\'obtention du token')
-      await log.error(JSON.stringify(e))
+    } catch (e: any) {
+      // only the response body: the serialized error would carry the request, client secret included
+      await log.error('Erreur lors de l\'obtention du token', e?.response?.data ?? e?.data)
       throw new Error('Erreur lors de l\'obtention du token')
     }
   } else if (auth.authMethod === 'session') {
@@ -60,7 +61,8 @@ export default async (auth: Auth, axios: AxiosInstance, log: LogFunctions): Prom
     }
 
     await log.debug(`Fetch session token (${loginMethod.toUpperCase()} ${auth.loginURL}) with headers: ${JSON.stringify(Object.keys(headersSession))}`)
-    const sessionRes = await axios({ method: loginMethod, url: auth.loginURL as string, headers: headersSession, data: body })
+    // credentials in the headers or the body: never follow a redirect that would resend them elsewhere
+    const sessionRes = await axios({ method: loginMethod, url: auth.loginURL as string, headers: headersSession, data: body, maxRedirects: 0, timeout: 60000 })
     const token = sessionRes.data && getValueByPath(sessionRes.data, tokenPath)
     if (typeof token === 'string' && token) {
       headers[tokenHeader] = token

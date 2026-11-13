@@ -9,7 +9,7 @@ import testUtils from '@data-fair/lib-processing-dev/tests-utils.js'
 import * as importApiPlugin from '../index.ts'
 import { run, stop } from '../lib/execute.ts'
 import { flattenData, blockHeaders } from '../lib/flatten.ts'
-import { getValueByPath } from '../lib/utils.ts'
+import { getValueByPath, externalRequestOptions, dfRetry } from '../lib/utils.ts'
 import getAuthHeaders from '../lib/authentications.ts'
 
 import processingConfigSchema from '../processing-config-schema.json' with { type: 'json' }
@@ -509,5 +509,56 @@ describe('import-api processing', () => {
       run(sireneContext(sireneConfig())),
       /Le chargement du fichier a échoué.*this dataset is not file based/
     )
+  })
+
+  describe('requests to the configured API', () => {
+    it('should follow a same-origin redirect with the credential headers', async () => {
+      const scope = nock('https://api.test')
+        .get('/old').reply(301, '', { Location: 'https://api.test/new' })
+      const target = nock('https://api.test', { reqheaders: { 'x-api-key': 'secret' } })
+        .get('/new').reply(200, { ok: true })
+      const res = await axios.get('https://api.test/old', { headers: { 'X-API-Key': 'secret' }, ...externalRequestOptions('https://api.test/old', ['X-API-Key']) })
+      assert.deepEqual(res.data, { ok: true })
+      assert.ok(scope.isDone() && target.isDone())
+    })
+
+    it('should drop the credential headers on a cross-origin redirect', async () => {
+      nock('https://api.test')
+        .get('/old').reply(302, '', { Location: 'https://cdn.test/file' })
+      const target = nock('https://cdn.test', { badheaders: ['x-api-key', 'session-token'] })
+        .get('/file').reply(200, { ok: true })
+      const res = await axios.get('https://api.test/old', {
+        headers: { 'X-API-Key': 'secret', 'Session-Token': 'tok' },
+        ...externalRequestOptions('https://api.test/old', ['X-API-Key', 'Session-Token'])
+      })
+      assert.deepEqual(res.data, { ok: true })
+      assert.ok(target.isDone())
+    })
+  })
+
+  describe('data-fair retry', () => {
+    const warnings: string[] = []
+    const log = { warning: async (msg: string) => { warnings.push(msg) } }
+
+    it('should retry a call answered 429', async () => {
+      let calls = 0
+      const result = await dfRetry(async () => {
+        calls++
+        if (calls < 3) throw Object.assign(new Error('429'), { status: 429 })
+        return 'ok'
+      }, log, 3, 1)
+      assert.equal(result, 'ok')
+      assert.equal(calls, 3)
+      assert.equal(warnings.length, 2)
+    })
+
+    it('should not retry other errors', async () => {
+      let calls = 0
+      await assert.rejects(dfRetry(async () => {
+        calls++
+        throw Object.assign(new Error('500'), { response: { status: 500 } })
+      }, log, 3, 1), /500/)
+      assert.equal(calls, 1)
+    })
   })
 })
