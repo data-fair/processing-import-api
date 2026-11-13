@@ -28,7 +28,7 @@ primary key on the dataset — the plugin warns when it is missing.
 | ----- | ----------- |
 | `drop` | Replace the data instead of adding to it: lines no longer returned by the API are removed. The replacement is atomic — on error the previous data is kept. An import that retrieved no line at all is refused, so a broken API cannot empty the dataset. No effect on a file dataset, where the new file always replaces everything. |
 
-To create an editable dataset from the start, tick **Jeu de données éditable** in create
+To create an editable dataset from the start, tick **Editable dataset** in create
 mode. Data Fair validates the lines of an editable dataset strictly against its schema and
 never infers it, so the dataset is created with every column of the mapping as a `string`:
 adjust the types and define the primary key in the dataset schema afterwards.
