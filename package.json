@@ -30,8 +30,8 @@
   },
   "homepage": "https://github.com/data-fair/processing-import-api#readme",
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@data-fair/lib-common-types": "^1.20.6",
     "@data-fair/lib-processing-dev": "^0.3.0",
     "@data-fair/lib-types-builder": "^1.7.0",
@@ -42,7 +42,7 @@
     "eslint": "^9.26.0",
     "husky": "^9.1.7",
     "neostandard": "^0.12.1",
-    "nock": "^14.0.12",
+    "nock": "^15.0.6",
     "typescript": "^5.8.3",
     "ws": "^8.19.0"
   },
