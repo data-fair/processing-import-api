@@ -9,7 +9,7 @@ import testUtils from '@data-fair/lib-processing-dev/tests-utils.js'
 import * as importApiPlugin from '../index.ts'
 import { run, stop } from '../lib/execute.ts'
 import { flattenData, blockHeaders } from '../lib/flatten.ts'
-import { getValueByPath, externalRequestOptions, dfRetry } from '../lib/utils.ts'
+import { getValueByPath, externalRequestOptions, dfRetry, requestTimeoutMs, isRequestTimeout } from '../lib/utils.ts'
 import getAuthHeaders from '../lib/authentications.ts'
 
 import processingConfigSchema from '../processing-config-schema.json' with { type: 'json' }
@@ -297,6 +297,72 @@ describe('import-api processing', () => {
     }))
     await assert.rejects(run(context, true), /same page twice/)
     assert.ok(apiScope.isDone())
+  })
+
+  describe('request timeout', () => {
+    /** Record the timeout of every request sent through the context's axios. */
+    const recordTimeouts = (context: any) => {
+      const timeouts: Array<number | undefined> = []
+      const original = context.axios
+      context.axios = Object.assign((cfg: any) => { timeouts.push(cfg.timeout); return original(cfg) }, original)
+      return timeouts
+    }
+
+    it('should keep 10 minutes when the option is not set', async () => {
+      const scope = nockSireneApi()
+      const context = sireneContext(sireneConfig())
+      const timeouts = recordTimeouts(context)
+      await run(context, true)
+      assert.ok(scope.isDone())
+      assert.deepStrictEqual(timeouts, [10 * 60000])
+    })
+
+    it('should apply the configured timeout to every page', async () => {
+      const page = (start: number) => ({ etablissements: sirene.etablissements.slice(start, start + 2) })
+      const scope = nock('https://api.insee.fr')
+        .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '0' }).reply(200, page(0))
+        .get('/entreprises/sirene/V3.11/siret').query({ nombre: '2', debut: '2' }).reply(200, { etablissements: [] })
+      const context = sireneContext(sireneConfig({
+        requestTimeout: 45,
+        pagination: { method: 'queryParams', limitKey: 'nombre', limitValue: 2, offsetKey: 'debut' }
+      }))
+      const timeouts = recordTimeouts(context)
+      await run(context, true)
+      assert.ok(scope.isDone())
+      assert.deepStrictEqual(timeouts, [45 * 60000, 45 * 60000])
+    })
+
+    it('should fail with a message naming the option when the API is too slow', async () => {
+      // hold back the whole answer, headers included, like an API still computing its export
+      // (nock's delay() sends the headers first, which axios does not report as a timeout)
+      nock('https://api.insee.fr').get('/entreprises/sirene/V3.11/siret')
+        .reply(async () => { await new Promise(resolve => setTimeout(resolve, 1000)); return [200, sirene] })
+      // 0.001 minute = 60 ms, below the 1 minute the form allows, to keep the test fast
+      const context = sireneContext(sireneConfig({ requestTimeout: 0.001 }))
+      await assert.rejects(run(context, true), (err: Error) => {
+        assert.match(err.message, /did not answer within 0\.001 minutes\b/)
+        assert.match(err.message, /"Request timeout \(minutes\)"/)
+        return true
+      })
+    })
+
+    it('should fall back to the default on an invalid value', () => {
+      assert.strictEqual(requestTimeoutMs(undefined), 600000)
+      assert.strictEqual(requestTimeoutMs(0), 600000)
+      assert.strictEqual(requestTimeoutMs(-5), 600000)
+      assert.strictEqual(requestTimeoutMs(Number.NaN), 600000)
+      assert.strictEqual(requestTimeoutMs(30), 1800000)
+      // axios reads 0 as "no timeout", and a Node timer above 2^31-1 ms fires after 1 ms
+      assert.strictEqual(requestTimeoutMs(0.000001), 1)
+      assert.strictEqual(requestTimeoutMs(50000), 2 ** 31 - 1)
+    })
+
+    it('should only treat the axios timeout as a request timeout', () => {
+      assert.ok(isRequestTimeout({ code: 'ECONNABORTED', message: 'timeout of 600000ms exceeded' }))
+      assert.ok(isRequestTimeout({ code: 'ETIMEDOUT', message: 'timeout of 600000ms exceeded' }))
+      assert.ok(!isRequestTimeout({ code: 'ETIMEDOUT', message: 'connect ETIMEDOUT 10.0.0.1:443' }))
+      assert.ok(!isRequestTimeout({ code: 'ECONNABORTED', message: 'Request aborted' }))
+    })
   })
 
   it('should not send the credentials to a next page link on another origin', async function () {
