@@ -400,6 +400,15 @@
               }
             }
           ]
+        },
+        "requestTimeout": {
+          "type": "number",
+          "title": "Request timeout (minutes)",
+          "x-i18n-title": { "fr": "Délai d'attente des requêtes (minutes)" },
+          "description": "How long to wait for the API to answer each request (each page when paginated) before failing the run. Raise it for an API whose export is slow to compute.",
+          "x-i18n-description": { "fr": "Durée d'attente de la réponse de l'API pour chaque requête (chaque page si la pagination est active) avant l'échec de l'exécution. Augmentez-la pour une API dont l'export est long à calculer." },
+          "default": 10,
+          "minimum": 1
         }
       }
     },

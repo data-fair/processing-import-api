@@ -11,7 +11,7 @@ import { secretKeys } from './prepare.ts'
 import { getPageUrl, isSameOrigin } from './pagination.ts'
 import { flattenData, blockHeaders } from './flatten.ts'
 import { getTargetDataset, createEditableDataset, uploadToFileDataset, uploadToEditableDataset, datasetTitle } from './upload.ts'
-import { getValueByPath, externalRequestOptions } from './utils.ts'
+import { getValueByPath, externalRequestOptions, requestTimeoutMs, isRequestTimeout } from './utils.ts'
 
 /**
  * True when an interruption is requested: the page loop ends and nothing is uploaded.
@@ -70,6 +70,7 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
   // named once, the pages update a single progress entry, and the URLs only go to debug.
   await log.info(`Fetch ${cfg.apiURL}`)
   const paginated = !!cfg.pagination && cfg.pagination.method !== 'none'
+  const timeout = requestTimeoutMs(cfg.requestTimeout)
   const pagesTask = 'Fetched rows'
   if (paginated) await log.task(pagesTask)
   while (nextPageURL) {
@@ -81,13 +82,21 @@ export const run = async (context: ProcessingContext<ProcessingConfig>, noUpload
       warnedOtherOrigin = true
     }
     const pageHeaders = sameOrigin ? headers : publicHeaders
-    const results = await axios({
-      method: 'get',
-      url: nextPageURL,
-      headers: pageHeaders,
-      ...externalRequestOptions(nextPageURL, Object.keys(pageHeaders).filter(h => h !== 'Accept')),
-      timeout: 10 * 60000 // very long timeout as we don't control the API and some export logic are very slow
-    })
+    let results
+    try {
+      results = await axios({
+        method: 'get',
+        url: nextPageURL,
+        headers: pageHeaders,
+        ...externalRequestOptions(nextPageURL, Object.keys(pageHeaders).filter(h => h !== 'Accept')),
+        // long by default as we don't control the API and some exports are very slow to compute
+        timeout
+      })
+    } catch (err) {
+      if (!isRequestTimeout(err)) throw err
+      const minutes = timeout / 60000
+      throw new Error(`The API did not answer within ${minutes} minute${minutes === 1 ? '' : 's'}. If it is only slow, raise "Request timeout (minutes)" in the "Data source" tab of the processing; with pagination, a smaller page size also shortens each request.`, { cause: err })
+    }
     const data = getValueByPath(results.data, cfg.resultsPath)
     if (!data) break
     if (paginated) {

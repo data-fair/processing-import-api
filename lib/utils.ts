@@ -67,3 +67,27 @@ export const dfRetry = async <T>(fn: () => Promise<T>, log: { warning: (msg: str
     }
   }
 }
+
+/** Default wait for each API request, kept from the former hard-coded value. */
+export const DEFAULT_REQUEST_TIMEOUT_MINUTES = 10
+
+/** Longest delay a Node timer accepts: above it, the timer fires after 1 ms instead. */
+const MAX_TIMER_MS = 2 ** 31 - 1
+
+/**
+ * Timeout of each request to the configured API, in milliseconds, from the `requestTimeout`
+ * option (minutes). A missing or invalid value falls back to the default. The result is kept
+ * between 1 ms (axios reads 0 as "no timeout") and the longest delay a Node timer accepts.
+ */
+export const requestTimeoutMs = (minutes?: number): number => {
+  const value = typeof minutes === 'number' && Number.isFinite(minutes) && minutes > 0 ? minutes : DEFAULT_REQUEST_TIMEOUT_MINUTES
+  return Math.min(MAX_TIMER_MS, Math.max(1, Math.round(value * 60000)))
+}
+
+/**
+ * True for the error axios throws when a request exceeds its `timeout` ("timeout of Xms
+ * exceeded", code ECONNABORTED, or ETIMEDOUT with `clarifyTimeoutError`). A network-level
+ * ETIMEDOUT ("connect ETIMEDOUT 1.2.3.4:443") is not one: raising the option would not help.
+ */
+export const isRequestTimeout = (err: any): boolean =>
+  (err?.code === 'ETIMEDOUT' || err?.code === 'ECONNABORTED') && /^timeout\b/i.test(err?.message ?? '')

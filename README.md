@@ -51,6 +51,7 @@ adjust the types and define the primary key in the dataset schema afterwards.
 | `apiURL` | URL of the API to harvest. |
 | `auth` | Authentication method (none, basic, bearer, API key, OAuth 2.0 or session), see below. |
 | `pagination` | Pagination strategy: none, query parameters or next-page link. |
+| `requestTimeout` | How long to wait for each API request (each page when paginated), in minutes. Default `10`. Raise it for an API whose export is slow to compute. The authentication requests (OAuth 2.0 token, session login) keep a 1-minute timeout. |
 
 #### Session authentication (login, then token)
 
